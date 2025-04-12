@@ -209,5 +209,12 @@ $conn->close();
     <?php else: ?>
         <p><strong>Nessun progetto trovato con i filtri selezionati.</strong></p>
     <?php endif; ?>
+
+    <a href="../Autenticazione/home_utente.php" style="text-decoration: none;">
+    <button type="button" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+        Torna alla Home
+    </button>
+    </a>
+
 </body>
 </html>
