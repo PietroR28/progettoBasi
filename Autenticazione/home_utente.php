@@ -58,7 +58,7 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'utente') {
 
         <!-- Finanzia un progetto -->
         <div class="col">
-            <a href="../Componenti/finanzia..php" class="text-decoration-none text-dark">
+            <a href="../Componenti/finanzia.php" class="text-decoration-none text-dark">
                 <div class="card card-hover shadow-sm h-100">
                     <div class="card-body">
                         <h5 class="card-title">💰 Finanzia un Progetto</h5>

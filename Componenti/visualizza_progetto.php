@@ -110,8 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['commento'], $_GET['id
 
 // Recupera i commenti relativi a ciascun progetto
 if (!empty($progetti)) {
-    foreach ($progetti as $progetto) {
-        // Modifica il join per usare 'id_utente' correttamente
+    foreach ($progetti as $index => $progetto) {
         $query = "SELECT c.testo, c.data, u.nickname 
                   FROM commento c 
                   JOIN utente u ON c.id_utente = u.id_utente 
@@ -121,14 +120,17 @@ if (!empty($progetti)) {
         $stmt->bind_param('i', $progetto['id_progetto']);
         $stmt->execute();
         $result = $stmt->get_result();
-        $progetto['commenti'] = [];
+        $commenti_progetto = [];
         while ($row = $result->fetch_assoc()) {
-            $progetto['commenti'][] = $row;
+            $commenti_progetto[] = $row;
         }
-        $commenti[] = $progetto; // Aggiungi il progetto con i commenti
         $stmt->close();
+
+        // Inserisci i commenti direttamente nel progetto
+        $progetti[$index]['commenti'] = $commenti_progetto;
     }
 }
+
 
 $conn->close();
 ?>
