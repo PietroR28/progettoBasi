@@ -2,7 +2,7 @@
 session_start();
 
 // Sicurezza: verifica che l'utente sia loggato e sia un utente semplice
-if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'utente') {
+if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'creatore') {
     header("Location: ../Autenticazione/login.php");
     exit();
 }
@@ -46,11 +46,11 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'utente') {
 
         <!-- Progetti disponibili -->
         <div class="col">
-            <a href="../Componenti/visualizza_progetto.php" class="text-decoration-none text-dark">
+            <a href="../Componenti/risposta_commento.php" class="text-decoration-none text-dark">
                 <div class="card card-hover shadow-sm h-100">
                     <div class="card-body">
                         <h5 class="card-title">📢 Progetti Disponibili</h5>
-                        <p class="card-text">Consulta i progetti disponibili e commentali se necessario.</p>
+                        <p class="card-text">Consulta i progetti disponibili, commentali e rispondi ai commenti  se necessario.</p>
                     </div>
                 </div>
             </a>
@@ -87,6 +87,18 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'utente') {
                     <div class="card-body">
                         <h5 class="card-title">📋 Candidati a un Progetto Software</h5>
                         <p class="card-text">Invia la tua candidatura ai progetti in cerca di sviluppatori.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+<!-- Crea progetto -->
+<div class="col">
+            <a href="../Componenti/crea_progetto.php" class="text-decoration-none text-dark">
+                <div class="card card-hover shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">📋 Crea nuovo progetto</h5>
+                        <p class="card-text">Inserisci un nuovo progetto.</p>
                     </div>
                 </div>
             </a>

@@ -17,11 +17,9 @@ if ($conn->connect_error) {
 
 $statoFiltro = $_GET['stato'] ?? '';
 $tipoFiltro = $_GET['tipo'] ?? '';
-
 $progetti = [];
-$commenti = [];
 
-// Filtraggio dei progetti
+// Filtro progetti
 if (($statoFiltro !== 'tutti' && !empty($statoFiltro)) || ($tipoFiltro !== 'tutti' && !empty($tipoFiltro))) {
     $query = "SELECT * FROM progetto WHERE 1=1";
     $params = [];
@@ -40,8 +38,6 @@ if (($statoFiltro !== 'tutti' && !empty($statoFiltro)) || ($tipoFiltro !== 'tutt
     }
 
     $stmt = $conn->prepare($query);
-
-    // Associa i parametri solo se esistono
     if (!empty($params)) {
         $stmt->bind_param($types, ...$params);
     }
@@ -53,15 +49,13 @@ if (($statoFiltro !== 'tutti' && !empty($statoFiltro)) || ($tipoFiltro !== 'tutt
     }
     $stmt->close();
 } elseif ($statoFiltro === 'tutti' && $tipoFiltro === 'tutti') {
-    // Se entrambi i filtri sono impostati su "tutti", mostra tutti i progetti
-    $query = "SELECT * FROM progetto";
-    $result = $conn->query($query);
+    $result = $conn->query("SELECT * FROM progetto");
     while ($row = $result->fetch_assoc()) {
         $progetti[] = $row;
     }
 }
 
-// Gestione dei commenti
+// Inserimento commenti (solo commenti principali)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['commento'], $_GET['id_progetto'])) {
     $id_progetto = (int)$_GET['id_progetto'];
     $commento = trim($_POST['commento']);
@@ -69,34 +63,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['commento'], $_GET['id
     if (isset($_SESSION['id_utente']) && !empty($_SESSION['id_utente'])) {
         $id_utente = (int)$_SESSION['id_utente'];
 
-        // Controllo se il progetto esiste
-        $checkProgetto = $conn->prepare("SELECT id_progetto FROM progetto WHERE id_progetto = ?");
-        $checkProgetto->bind_param('i', $id_progetto);
-        $checkProgetto->execute();
-        $res = $checkProgetto->get_result();
-
-        if ($res->num_rows === 0) {
-            die("Progetto non esistente.");
-        }
-        $checkProgetto->close();
-
-        // Controllo se utente esiste
-        $checkUtente = $conn->prepare("SELECT id_utente FROM utente WHERE id_utente = ?");
-        $checkUtente->bind_param('i', $id_utente);
-        $checkUtente->execute();
-        $resUtente = $checkUtente->get_result();
-
-        if ($resUtente->num_rows === 0) {
-            die("Utente non esistente.");
-        }
-        $checkUtente->close();
-
-        // Inserisco il commento
-        $stmt = $conn->prepare("INSERT INTO commento (testo, id_progetto, id_utente, data) VALUES (?, ?, ?, NOW())");
+        $stmt = $conn->prepare("INSERT INTO commento (testo, id_progetto, id_utente, data, id_commento_padre) VALUES (?, ?, ?, NOW(), NULL)");
         $stmt->bind_param('sii', $commento, $id_progetto, $id_utente);
 
         if ($stmt->execute()) {
-            // Reindirizzamento dopo inserimento
             header("Location: visualizza_progetto.php?stato=" . urlencode($statoFiltro) . "&tipo=" . urlencode($tipoFiltro));
             exit;
         } else {
@@ -108,29 +78,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['commento'], $_GET['id
     }
 }
 
-// Recupera i commenti relativi a ciascun progetto
-if (!empty($progetti)) {
-    foreach ($progetti as $index => $progetto) {
-        $query = "SELECT c.testo, c.data, u.nickname 
-                  FROM commento c 
-                  JOIN utente u ON c.id_utente = u.id_utente 
-                  WHERE c.id_progetto = ? 
-                  ORDER BY c.data DESC";
-        $stmt = $conn->prepare($query);
-        $stmt->bind_param('i', $progetto['id_progetto']);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $commenti_progetto = [];
-        while ($row = $result->fetch_assoc()) {
-            $commenti_progetto[] = $row;
+// Recupera commenti e risposte per ogni progetto
+foreach ($progetti as $index => $progetto) {
+    $commenti = [];
+
+    $stmt = $conn->prepare("SELECT c.id_commento, c.testo, c.data, u.nickname 
+                            FROM commento c 
+                            JOIN utente u ON c.id_utente = u.id_utente 
+                            WHERE c.id_progetto = ? AND c.id_commento_padre IS NULL 
+                            ORDER BY c.data DESC");
+    $stmt->bind_param('i', $progetto['id_progetto']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    while ($row = $result->fetch_assoc()) {
+        $row['risposte'] = [];
+
+        $substmt = $conn->prepare("SELECT c.testo, c.data, u.nickname 
+                                   FROM commento c 
+                                   JOIN utente u ON c.id_utente = u.id_utente 
+                                   WHERE c.id_commento_padre = ? 
+                                   ORDER BY c.data ASC");
+        $substmt->bind_param("i", $row['id_commento']);
+        $substmt->execute();
+        $subres = $substmt->get_result();
+
+        while ($r = $subres->fetch_assoc()) {
+            $row['risposte'][] = $r;
         }
-        $stmt->close();
+        $substmt->close();
 
-        // Inserisci i commenti direttamente nel progetto
-        $progetti[$index]['commenti'] = $commenti_progetto;
+        $commenti[] = $row;
     }
-}
 
+    $stmt->close();
+    $progetti[$index]['commenti'] = $commenti;
+}
 
 $conn->close();
 ?>
@@ -139,7 +122,7 @@ $conn->close();
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Filtra Progetti</title>
+    <title>Visualizza Progetti</title>
 </head>
 <body>
     <h2>Filtra i progetti disponibili</h2>
@@ -188,17 +171,27 @@ $conn->close();
                                 <li>
                                     <strong><?= htmlspecialchars($commento['nickname']) ?></strong> - <?= htmlspecialchars($commento['data']) ?>
                                     <p><?= nl2br(htmlspecialchars($commento['testo'])) ?></p>
+
+                                    <!-- Risposte -->
+                                    <?php if (!empty($commento['risposte'])): ?>
+                                        <ul style="margin-left: 20px;">
+                                            <?php foreach ($commento['risposte'] as $risposta): ?>
+                                                <li>
+                                                    <strong><?= htmlspecialchars($risposta['nickname']) ?></strong> - <?= htmlspecialchars($risposta['data']) ?>
+                                                    <p><?= nl2br(htmlspecialchars($risposta['testo'])) ?></p>
+                                                </li>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    <?php endif; ?>
                                 </li>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </ul>
 
-                    <hr>
-
-                    <!-- Aggiungi commento -->
                     <h4>Aggiungi un commento</h4>
-                    <form method="POST" action="visualizza_progetto.php?id_progetto=<?= $progetto['id_progetto'] ?>">
+                    <form method="POST" action="visualizza_progetto.php?id_progetto=<?= $progetto['id_progetto'] ?>&stato=<?= urlencode($statoFiltro) ?>&tipo=<?= urlencode($tipoFiltro) ?>">
                         <textarea name="commento" required placeholder="Scrivi il tuo commento..."></textarea>
+                        <br>
                         <button type="submit">Aggiungi commento</button>
                     </form>
 
@@ -210,11 +203,8 @@ $conn->close();
         <p><strong>Nessun progetto trovato con i filtri selezionati.</strong></p>
     <?php endif; ?>
 
-    <a href="../Autenticazione/home_utente.php" style="text-decoration: none;">
-    <button type="button" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
-        Torna alla Home
-    </button>
+    <a href="../Autenticazione/home_utente.php">
+        <button>🏠 Torna alla Home</button>
     </a>
-
 </body>
 </html>

@@ -10,10 +10,10 @@ $success_message = null;
 if (isset($_SESSION['id_utente'])) {
     // Reindirizza in base al ruolo dell'utente
     if ($_SESSION['ruolo'] === 'amministratore') {
-        header("Location: admin_dashboard.php");
+        header("Location: home_amministratore.php");
         exit;
     } elseif ($_SESSION['ruolo'] === 'creatore') {
-        header("Location: creator_dashboard.php");
+        header("Location: home_creatore.php");
         exit;
     } else {
         header("Location: home_utente.php");
@@ -62,10 +62,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     
                     // Reindirizza in base al ruolo
                     if ($user['ruolo'] === 'amministratore') {
-                        header("Location: admin_dashboard.php");
+                        header("Location: home_amministratore.php");
                         exit;
                     } elseif ($user['ruolo'] === 'creatore') {
-                        header("Location: creator_dashboard.php");
+                        header("Location: home_creatore.php");
                         exit;
                     } else {
                         header("Location: home_utente.php");

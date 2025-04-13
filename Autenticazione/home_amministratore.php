@@ -2,7 +2,7 @@
 session_start();
 
 // Sicurezza: verifica che l'utente sia loggato e sia un utente semplice
-if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'utente') {
+if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'amministratore') {
     header("Location: ../Autenticazione/login.php");
     exit();
 }
@@ -87,6 +87,18 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'utente') {
                     <div class="card-body">
                         <h5 class="card-title">📋 Candidati a un Progetto Software</h5>
                         <p class="card-text">Invia la tua candidatura ai progetti in cerca di sviluppatori.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+   <!-- Competenza -->
+   <div class="col">
+            <a href="componenti/commenta_progetto.php" class="text-decoration-none text-dark">
+                <div class="card card-hover shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">💬 Aggiungi una Competenza</h5>
+                        <p class="card-text">Inserisci una nuova stringa nella lista delle competenze.</p>
                     </div>
                 </div>
             </a>
