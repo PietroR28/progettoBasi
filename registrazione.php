@@ -213,7 +213,7 @@
         const securityCodeContainer = document.getElementById('security_code_container');
         const securityCodeInput = document.getElementById('codice_sicurezza');
         
-        if (ruolo === 'amministratore' || ruolo === 'creatore') {
+        if (ruolo === 'amministratore') {
             securityCodeContainer.classList.remove('hidden');
             securityCodeInput.setAttribute('required', '');
         } else {
@@ -266,9 +266,9 @@
             return;
         }
 
-        // Verifica codice sicurezza per amministratori e creatori
-        if ((ruolo === 'amministratore' || ruolo === 'creatore') && !codiceSicurezza) {
-            alert("Per i ruoli di amministratore e creatore è richiesto il codice di sicurezza.");
+        // Verifica codice sicurezza solo per amministratori
+        if (ruolo === 'amministratore' && !codiceSicurezza) {
+            alert("Per il ruolo di amministratore è richiesto il codice di sicurezza.");
             return;
         }
 
@@ -302,8 +302,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $luogoNascita = $connessione->real_escape_string($_POST['luogo_nascita']);
     $ruolo = $connessione->real_escape_string($_POST['ruolo']);
     
-    // Il codice di sicurezza è necessario solo per amministratori e creatori
-    $codiceSicurezza = isset($_POST['codice_sicurezza']) ? $connessione->real_escape_string($_POST['codice_sicurezza']) : '';
+    // Il codice di sicurezza è necessario solo per amministratori
+    $codiceSicurezza = ($ruolo === 'amministratore' && isset($_POST['codice_sicurezza'])) ? $connessione->real_escape_string($_POST['codice_sicurezza']) : '';
     
     // Gestione password - hash della password per sicurezza
     $password = $_POST['password'];

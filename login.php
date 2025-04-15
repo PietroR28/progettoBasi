@@ -7,25 +7,22 @@ $error_message = null;
 $success_message = null;
 
 // Verifica se l'utente è già loggato, in tal caso reindirizza
-if (isset($_SESSION['id_utente'])) {
+if (isset($_SESSION['user_id'])) {
     // Reindirizza in base al ruolo dell'utente
     if ($_SESSION['ruolo'] === 'amministratore') {
-        header("Location: home_amministratore.php");
+        header("Location: Autenticazione/home_amministratore.php");
         exit;
     } elseif ($_SESSION['ruolo'] === 'creatore') {
-        header("Location: home_creatore.php");
+        header("Location: creator_dashboard.php");
         exit;
     } else {
-        header("Location: home_utente.php");
+        header("Location: dashboard.php");
         exit;
     }
 }
 
 // Flag per mostrare il campo codice di sicurezza
 $show_security_code = false;
-// Memorizza i valori inviati in precedenza
-$email_value = '';
-$is_admin = false;
 
 // Gestione del form di login
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -43,8 +40,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } else {
         // Ottieni e sanitizza i dati dal form
         $email = $connessione->real_escape_string($_POST['email']);
-        $email_value = $email; // Memorizza per il form
-        $password = $_POST['password'];
+        $password = $_POST['password']; // La password non va sanitizzata prima di verificarla
         
         try {
             // Chiamata alla stored procedure per l'autenticazione
@@ -61,44 +57,42 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 if (password_verify($password, $user['password'])) {
                     // Per gli amministratori, verifica anche il codice di sicurezza
                     if ($user['ruolo'] === 'amministratore') {
-                        $is_admin = true; // Segna l'utente come admin
-                        
                         if (!isset($_POST['codice_sicurezza']) || empty($_POST['codice_sicurezza'])) {
                             // Mostra il campo per il codice di sicurezza
-                            $error_message = "Per completare l'accesso come amministratore, inserisci il codice di sicurezza.";
+                            $error_message = "È necessario inserire il codice di sicurezza per un account amministratore.";
                             $show_security_code = true;
                         } 
                         elseif ($_POST['codice_sicurezza'] !== $user['codice_sicurezza']) {
                             // Il codice è stato fornito ma è errato
-                            $error_message = "Codice di sicurezza non valido. Riprova.";
+                            $error_message = "Codice di sicurezza non valido.";
                             $show_security_code = true;
                         } 
                         else {
-                            // Password e codice corretti, crea la sessione
+                            // Password e codice corretti
+                            $_SESSION['user_id'] = $user['email'];
                             $_SESSION['id_utente'] = $user['id_utente'];
-                            $_SESSION['email'] = $user['email'];
                             $_SESSION['nickname'] = $user['nickname'];
                             $_SESSION['nome'] = $user['nome'];
                             $_SESSION['cognome'] = $user['cognome'];
                             $_SESSION['ruolo'] = $user['ruolo'];
                             
-                            header("Location: home_amministratore.php");
+                            header("Location: admin_dashboard.php");
                             exit;
                         }
                     } else {
                         // Per utenti normali o creatori, basta la password
+                        $_SESSION['user_id'] = $user['email'];
                         $_SESSION['id_utente'] = $user['id_utente'];
-                        $_SESSION['email'] = $user['email'];
                         $_SESSION['nickname'] = $user['nickname'];
                         $_SESSION['nome'] = $user['nome'];
                         $_SESSION['cognome'] = $user['cognome'];
                         $_SESSION['ruolo'] = $user['ruolo'];
                         
                         if ($user['ruolo'] === 'creatore') {
-                            header("Location: home_creatore.php");
+                            header("Location: creator_dashboard.php");
                             exit;
                         } else {
-                            header("Location: home_utente.php");
+                            header("Location: dashboard.php");
                             exit;
                         }
                     }
@@ -121,13 +115,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 ?>
 
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - BoStarter</title>
+    <title>Login Form</title>
     <style>
         * {
             box-sizing: border-box;
@@ -138,23 +131,41 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             background-color: #f5f5f5;
             margin: 0;
             padding: 0;
+        }
+        
+        .container {
             display: flex;
-            justify-content: center;
+            min-height: 100vh;
             align-items: center;
+            justify-content: center;
+        }
+        
+        .illustration {
+            background-image: url('images/background.jpg');
+            background-size: cover;
+            width: 40%;
             min-height: 100vh;
         }
         
-        .login-container {
+        .form-wrapper {
+            width: 60%;
+            background-color: white;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .form-wrapper2 {
+            padding: 0 30px;
             width: 100%;
             max-width: 400px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         
         h1 {
-            text-align: center;
             margin-bottom: 20px;
         }
         
@@ -164,6 +175,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         .form-group {
             margin-bottom: 20px;
+            width: 100%;
         }
         
         label {
@@ -183,12 +195,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         button {
             background-color: #4CAF50;
             color: white;
-            padding: 12px;
+            padding: 12px 20px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-size: 16px;
             width: 100%;
+            margin-top: 10px;
         }
         
         button:hover {
@@ -196,7 +209,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
         
         p {
-            text-align: center;
             margin-top: 20px;
         }
         
@@ -209,80 +221,59 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             text-decoration: underline;
         }
         
-        .message {
+        .error-message {
+            color: #f44336;
             font-size: 14px;
             margin-top: 10px;
             text-align: center;
-            padding: 8px;
-            border-radius: 4px;
-        }
-        
-        .error-message {
-            color: white;
-            background-color: #f44336;
         }
         
         .success-message {
-            color: white;
-            background-color: #4CAF50;
+            color: #4CAF50;
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
         }
         
-        .admin-notice {
-            background-color: #f9f9f9;
-            padding: 12px;
-            border-left: 4px solid #4CAF50;
-            margin-bottom: 15px;
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h1>ACCESSO</h1>
-        
-        <form method="post">
-            <?php if ($is_admin && $show_security_code): ?>
-                <!-- Form per amministratori che devono inserire il codice di sicurezza -->
-                <div class="admin-notice">
-                    <p>Accesso come <strong>amministratore</strong>.<br>
-                    Inserisci il codice di sicurezza per completare l'accesso.</p>
-                </div>
-                
-                <input type="hidden" name="email" value="<?php echo htmlspecialchars($email_value); ?>">
-                <input type="hidden" name="password" value="<?php echo htmlspecialchars($_POST['password']); ?>">
-                
-                <div class="form-group">
-                    <label for="codice_sicurezza">Codice di sicurezza</label>
-                    <input type="password" id="codice_sicurezza" name="codice_sicurezza" required autofocus>
-                </div>
-                
-                <button type="submit">Completa Accesso</button>
-            <?php else: ?>
-                <!-- Form standard di login -->
+<div class="container">
+    <div class="illustration"></div>
+    <div class="form-wrapper">
+        <div class="form-wrapper2">
+            <h1>LOGIN</h1>
+            <form method="post">
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($email_value); ?>" required>
+                    <input type="email" id="email" name="email" required placeholder="Inserisci la tua email">
                 </div>
-                
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
+                    <input type="password" id="password" name="password" required placeholder="Inserisci la password">
+                </div>
+                
+                <div id="security_code_container" class="form-group <?php echo $show_security_code ? '' : 'hidden'; ?>">
+                    <label for="codice_sicurezza">Codice di sicurezza (solo per amministratori)</label>
+                    <input type="password" id="codice_sicurezza" name="codice_sicurezza" placeholder="Inserisci il codice di sicurezza">
                 </div>
                 
                 <button type="submit">Accedi</button>
+            </form>
+            <p>Non hai un account? <a href="registrazione.php">Registrati</a></p>
+            
+            <?php if(isset($error_message)): ?>
+                <p class="error-message"><?php echo $error_message; ?></p>
             <?php endif; ?>
-        </form>
-        
-        <?php if(!$is_admin): ?>
-        <p>Non hai un account? <a href="../registrazione.php">Registrati</a></p>
-        <?php endif; ?>
-        
-        <?php if(isset($error_message)): ?>
-            <div class="message error-message"><?php echo $error_message; ?></div>
-        <?php endif; ?>
-        
-        <?php if(isset($success_message)): ?>
-            <div class="message success-message"><?php echo $success_message; ?></div>
-        <?php endif; ?>
+            
+            <?php if(isset($success_message)): ?>
+                <p class="success-message"><?php echo $success_message; ?></p>
+            <?php endif; ?>
+        </div>
     </div>
+</div>
 </body>
 </html>
