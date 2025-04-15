@@ -273,7 +273,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </form>
         
         <?php if(!$is_admin): ?>
-        <p>Non hai un account? <a href="../registrazione.php">Registrati</a></p>
+        <p>Non hai un account? <a href="../Autenticazione/registrazione.php">Registrati</a></p>
         <?php endif; ?>
         
         <?php if(isset($error_message)): ?>
