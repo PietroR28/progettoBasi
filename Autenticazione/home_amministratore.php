@@ -34,7 +34,7 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'amministratore') {
 
         <!-- Le tue Skill -->
         <div class="col">
-            <a href="componenti/inserisci_skill.php" class="text-decoration-none text-dark">
+            <a href="../Ccomponenti/skill_utente.php" class="text-decoration-none text-dark">
                 <div class="card card-hover shadow-sm h-100">
                     <div class="card-body">
                         <h5 class="card-title">🧠 Le tue Skill</h5>
@@ -94,7 +94,7 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'amministratore') {
 
    <!-- Competenza -->
    <div class="col">
-            <a href="componenti/commenta_progetto.php" class="text-decoration-none text-dark">
+            <a href="../Componenti/inserisci_competenza.php" class="text-decoration-none text-dark">
                 <div class="card card-hover shadow-sm h-100">
                     <div class="card-body">
                         <h5 class="card-title">💬 Aggiungi una Competenza</h5>
