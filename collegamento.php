@@ -4,7 +4,7 @@
 $host = "127.0.0.1:3306";
 $user = "root";
 $password = "";
-$database = "progettoBasiDiDati_db";
+$database = "bostarter_db";
 
 $connessione = new mysqli($host, $user, $password, $database);
 

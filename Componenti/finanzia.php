@@ -3,8 +3,8 @@
 session_start();
 
 // Verifica se l'utente è loggato, altrimenti reindirizza al login
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
+if (!isset($_SESSION['id_utente'])) {
+    header("Location: ../Autenticazione/login.php");
     exit;
 }
 
@@ -35,38 +35,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['seleziona_progetto']))
 // Gestione del finanziamento
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['importo']) && $id_progetto > 0) {
     $importo = floatval(str_replace(',', '.', $_POST['importo']));
-    $email = $_SESSION['user_id'];
     
-    // Recupera l'ID utente dall'email
-    $stmt_user = $connessione->prepare("SELECT id_utente FROM utente WHERE email = ?");
-    $stmt_user->bind_param("s", $email);
-    $stmt_user->execute();
-    $result_user = $stmt_user->get_result();
+    // Usa direttamente l'ID utente dalla sessione
+    $id_utente = $_SESSION['id_utente'];
     
-    if ($result_user->num_rows > 0) {
-        $user_data = $result_user->fetch_assoc();
-        $id_utente = $user_data['id_utente'];
+    try {
+        // Chiamata alla stored procedure per inserire il finanziamento
+        $stmt = $connessione->prepare("CALL InserisciFinanziamento(?, ?, ?)");
+        $stmt->bind_param("iid", $id_utente, $id_progetto, $importo);
         
-        try {
-            // Chiamata alla stored procedure per inserire il finanziamento
-            $stmt = $connessione->prepare("CALL InserisciFinanziamento(?, ?, ?)");
-            $stmt->bind_param("iid", $id_utente, $id_progetto, $importo);
-            
-            if ($stmt->execute()) {
-                $message = "Finanziamento di €" . number_format($importo, 2, ',', '.') . " registrato con successo.";
-            } else {
-                $message = "Errore durante l'inserimento del finanziamento: " . $connessione->error;
-            }
-            
-            $stmt->close();
-        } catch (Exception $e) {
-            $message = "Errore: " . $e->getMessage();
+        if ($stmt->execute()) {
+            $message = "Finanziamento di €" . number_format($importo, 2, ',', '.') . " registrato con successo.";
+        } else {
+            $message = "Errore durante l'inserimento del finanziamento: " . $connessione->error;
         }
-    } else {
-        $message = "Errore: Utente non trovato.";
+        
+        $stmt->close();
+    } catch (Exception $e) {
+        $message = "Errore: " . $e->getMessage();
     }
-    
-    $stmt_user->close();
 }
 
 // Verifica l'esistenza del progetto se è stato fornito un ID
@@ -131,7 +118,7 @@ $connessione->close();
             <div class="message error">Progetto non trovato.</div>
         <?php endif; ?>
         
-        <a href="dashboard.php"><button type="button">Torna alla Dashboard</button></a>
+        <a href="../Autenticazione/home_utente.php"><button type="button">Torna alla Home</button></a>
     </div>
 </body>
 </html>
