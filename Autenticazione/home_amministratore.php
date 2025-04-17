@@ -34,7 +34,7 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'amministratore') {
 
         <!-- Le tue Skill -->
         <div class="col">
-            <a href="../Ccomponenti/skill_utente.php" class="text-decoration-none text-dark">
+            <a href="../Componenti/skill_utente.php" class="text-decoration-none text-dark">
                 <div class="card card-hover shadow-sm h-100">
                     <div class="card-body">
                         <h5 class="card-title">🧠 Le tue Skill</h5>
