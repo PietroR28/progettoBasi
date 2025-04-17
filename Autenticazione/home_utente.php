@@ -82,7 +82,7 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'utente') {
 
         <!-- Candidatura profilo software -->
         <div class="col">
-            <a href="componenti/candidatura_profilo.php" class="text-decoration-none text-dark">
+            <a href="../Componenti/candidatura_profilo.php" class="text-decoration-none text-dark">
                 <div class="card card-hover shadow-sm h-100">
                     <div class="card-body">
                         <h5 class="card-title">📋 Candidati a un Progetto Software</h5>
