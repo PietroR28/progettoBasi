@@ -6,6 +6,30 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'creatore') {
     header("Location: ../Autenticazione/login.php");
     exit();
 }
+
+// Connetti al database
+$conn = new mysqli("localhost", "root", "", "bostarter_db");
+if ($conn->connect_error) {
+    die("Connessione fallita: " . $conn->connect_error);
+}
+
+$id_creatore = $_SESSION['id_utente'];
+
+// Query per contare le candidature in attesa
+$query = "
+    SELECT COUNT(*) AS tot
+    FROM candidatura c
+    JOIN profilo p ON c.id_profilo = p.id_profilo
+    JOIN progetto pr ON p.id_progetto = pr.id_progetto
+    WHERE pr.id_utente_creatore = $id_creatore
+      AND c.accettazione = 'in attesa'
+";
+
+$res = $conn->query($query);
+$row = $res->fetch_assoc();
+$notifiche = $row['tot'];
+
+
 ?>
 
 <!DOCTYPE html>
@@ -82,11 +106,40 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'creatore') {
 
         <!-- Candidatura profilo software -->
         <div class="col">
-            <a href="componenti/candidatura_profilo.php" class="text-decoration-none text-dark">
+            <a href="../Componenti/candidatura_profilo.php" class="text-decoration-none text-dark">
                 <div class="card card-hover shadow-sm h-100">
                     <div class="card-body">
                         <h5 class="card-title">📋 Candidati a un Progetto Software</h5>
                         <p class="card-text">Invia la tua candidatura ai progetti in cerca di sviluppatori.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Gestisci Candidature -->
+        <div class="col">
+            <a href="../Componenti/gestione_candidatura.php" class="text-decoration-none text-dark">
+                <div class="card card-hover shadow-sm h-100 position-relative">
+                    <?php if ($notifiche > 0): ?>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            <?php echo $notifiche; ?>
+                        </span>
+                    <?php endif; ?>
+                    <div class="card-body">
+                        <h5 class="card-title">📋 Gestisci le Candidature</h5>
+                        <p class="card-text">Accetta o rifiuta una Candidatura per un tuo progetto software.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+          <!-- Inserisci profilo  -->
+          <div class="col">
+            <a href="../Componenti/associa_profilo.php" class="text-decoration-none text-dark">
+                <div class="card card-hover shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">📋 Associa un Profilo</h5>
+                        <p class="card-text">Associa un profilo ad un Progetto Software.</p>
                     </div>
                 </div>
             </a>

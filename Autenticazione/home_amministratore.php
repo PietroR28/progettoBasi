@@ -82,7 +82,7 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'amministratore') {
 
         <!-- Candidatura profilo software -->
         <div class="col">
-            <a href="componenti/candidatura_profilo.php" class="text-decoration-none text-dark">
+            <a href="../Componenti/candidatura_profilo.php" class="text-decoration-none text-dark">
                 <div class="card card-hover shadow-sm h-100">
                     <div class="card-body">
                         <h5 class="card-title">📋 Candidati a un Progetto Software</h5>
@@ -92,13 +92,25 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'amministratore') {
             </a>
         </div>
 
-   <!-- Competenza -->
-   <div class="col">
+        <!-- Competenza -->
+        <div class="col">
             <a href="../Componenti/inserisci_competenza.php" class="text-decoration-none text-dark">
                 <div class="card card-hover shadow-sm h-100">
                     <div class="card-body">
                         <h5 class="card-title">💬 Aggiungi una Competenza</h5>
                         <p class="card-text">Inserisci una nuova stringa nella lista delle competenze.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Inserisci competenza -->
+        <div class="col">
+            <a href="../Componenti/inserisci_competenza.php" class="text-decoration-none text-dark">
+                <div class="card card-hover shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">📊 Competenza</h5>
+                        <p class="card-text">Inserisci una nuova competenza.</p>
                     </div>
                 </div>
             </a>

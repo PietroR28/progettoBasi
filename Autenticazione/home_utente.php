@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 
@@ -6,6 +7,7 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'utente') {
     header("Location: ../Autenticazione/login.php");
     exit();
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -34,7 +36,7 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'utente') {
 
         <!-- Le tue Skill -->
         <div class="col">
-            <a href="../Componenti/skill_utente" class="text-decoration-none text-dark">
+            <a href="../Componenti/skill_utente.php" class="text-decoration-none text-dark">
                 <div class="card card-hover shadow-sm h-100">
                     <div class="card-body">
                         <h5 class="card-title">🧠 Le tue Skill</h5>

@@ -36,6 +36,6 @@ else { $messaggio = "❌ Devi inserire un nome!"; } } $connessione->close(); ?>
     <label for="nome_competenza">Nome Competenza:</label><br> <input type="text" name="nome_competenza" required><br><br>
 <button type="submit">💾 Salva</button>
 </form>
-<a href="home_amministratore.php">⬅ Torna indietro</a>
+<a href="../Autenticazione/home_amministratore.php">⬅ Torna alla Home</a>
 
 </body> </html>
