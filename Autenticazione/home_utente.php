@@ -1,4 +1,3 @@
-
 <?php
 session_start();
 
@@ -65,18 +64,6 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'utente') {
                     <div class="card-body">
                         <h5 class="card-title">💰 Finanzia un Progetto</h5>
                         <p class="card-text">Sostieni economicamente i progetti che ti ispirano.</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <!-- Scegli una reward -->
-        <div class="col">
-            <a href="componenti/scelta_reward.php" class="text-decoration-none text-dark">
-                <div class="card card-hover shadow-sm h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">🎁 Scegli una Reward</h5>
-                        <p class="card-text">Visualizza e scegli la ricompensa per i tuoi finanziamenti.</p>
                     </div>
                 </div>
             </a>

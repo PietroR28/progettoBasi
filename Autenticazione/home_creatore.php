@@ -92,18 +92,6 @@ $notifiche = $row['tot'];
             </a>
         </div>
 
-        <!-- Scegli una reward -->
-        <div class="col">
-            <a href="componenti/scelta_reward.php" class="text-decoration-none text-dark">
-                <div class="card card-hover shadow-sm h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">🎁 Scegli una Reward</h5>
-                        <p class="card-text">Visualizza e scegli la ricompensa per i tuoi finanziamenti.</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-
         <!-- Candidatura profilo software -->
         <div class="col">
             <a href="../Componenti/candidatura_profilo.php" class="text-decoration-none text-dark">
