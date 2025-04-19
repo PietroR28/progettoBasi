@@ -145,6 +145,18 @@ $notifiche = $row['tot'];
             </a>
         </div>
 
+        <!-- Inseriscii Reward -->
+<div class="col">
+    <a href="../Componenti/inserisci_reward.php" class="text-decoration-none text-dark">
+        <div class="card card-hover shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title">🎁 Inserisci Reward</h5>
+                <p class="card-text">Crea e gestisci ricompense per i tuoi progetti.</p>
+            </div>
+        </div>
+    </a>
+</div>
+
         <!-- Statistiche globali -->
         <div class="col">
             <a href="componenti/statistiche_globali.php" class="text-decoration-none text-dark">
