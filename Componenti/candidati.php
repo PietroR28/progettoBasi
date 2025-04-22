@@ -17,13 +17,11 @@ if (!isset($_POST['id_profilo'])) {
 
 $id_profilo = $_POST['id_profilo'];
 
-$conn = new mysqli("localhost", "root", "", "bostarter_db");
-if ($conn->connect_error) {
-    die("Connessione fallita: " . $conn->connect_error);
-}
+require_once __DIR__ . '/../mamp_xampp.php';
+
 
 // Esegui la stored procedure
-$stmt = $conn->prepare("CALL InserisciCandidatura(?, ?)");
+$stmt = $connessione->prepare("CALL InserisciCandidatura(?, ?)");
 if (!$stmt) {
     die("Errore nella preparazione della query: " . $conn->error);
 }
@@ -38,5 +36,5 @@ if ($stmt->execute()) {
 }
 
 $stmt->close();
-$conn->close();
+$connessione->close();
 ?>

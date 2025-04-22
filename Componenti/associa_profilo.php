@@ -7,11 +7,8 @@ if (!isset($_SESSION['id_utente'])) {
 }
 
 $id_utente = $_SESSION['id_utente'];
-$conn = new mysqli('localhost', 'root', '', 'bostarter_db');
+require_once __DIR__ . '/../mamp_xampp.php';
 
-if ($conn->connect_error) {
-    die("Connessione fallita: " . $conn->connect_error);
-}
 ?>
 
 <!DOCTYPE html>

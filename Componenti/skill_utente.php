@@ -5,14 +5,7 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 // Connessione al DB
-$host = 'localhost';
-$user = 'root';
-$password = '';
-$database = 'bostarter_db';
-
-$connessione = new mysqli($host, $user, $password, $database);
-$id_utente = $_SESSION['id_utente'];
-$messaggio = "";
+require_once __DIR__ . '/../mamp_xampp.php';
 
 // Se è stato inviato il form
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -36,13 +29,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Carica tutte le competenze disponibili
 $lista_competenze = [];
-$result = $connessione->query("SELECT id_competenza, nome FROM competenza");
+$result = $conn->query("SELECT id_competenza, nome FROM competenza");
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $lista_competenze[] = $row;
     }
 }
-$connessione->close();
+$conn->close();
 ?>
 
 <!DOCTYPE html>

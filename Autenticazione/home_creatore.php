@@ -7,11 +7,8 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'creatore') {
     exit();
 }
 
-// Connetti al database
-$conn = new mysqli("localhost", "root", "", "bostarter_db");
-if ($conn->connect_error) {
-    die("Connessione fallita: " . $conn->connect_error);
-}
+require_once __DIR__ . '/../mamp_xampp.php'; // o regola il percorso
+
 
 $id_creatore = $_SESSION['id_utente'];
 

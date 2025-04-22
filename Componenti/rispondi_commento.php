@@ -15,12 +15,18 @@ $id_progetto = isset($_GET['id_progetto']) ? (int)$_GET['id_progetto'] : 0;
 $id_commento_padre = isset($_GET['id_commento']) ? (int)$_GET['id_commento'] : 0;
 
 // Connessione al DB
-$conn = new mysqli('localhost', 'root', '', 'bostarter_db');
-if ($conn->connect_error) {
-    die("Connessione fallita: " . $conn->connect_error);
-}
+require_once __DIR__ . '/../mamp_xampp.php';
 
 $messaggio = '';
+
+// Recupera il commento padre
+$testo_commento_padre = '';
+$stmt = $conn->prepare("SELECT testo FROM commento WHERE id_commento = ?");
+$stmt->bind_param("i", $id_commento_padre);
+$stmt->execute();
+$stmt->bind_result($testo_commento_padre);
+$stmt->fetch();
+$stmt->close();
 
 // Gestione invio risposta
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['testo'])) {
@@ -32,6 +38,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['testo'])) {
         $stmt->bind_param("siii", $testo, $id_progetto, $id_utente, $id_commento_padre);
 
         if ($stmt->execute()) {
+            require_once __DIR__ . '/../mongoDB/mongodb.php';
+
+            log_event(
+                'RISPOSTA_COMMENTO',
+                $_SESSION['email'],
+                "L'utente {$_SESSION['email']} ha risposto al commento ID $id_commento_padre sul progetto ID $id_progetto.",
+                [
+                    'id_utente' => $id_utente,
+                    'id_progetto' => $id_progetto,
+                    'id_commento_padre' => $id_commento_padre,
+                    'id_commento' => $id_commento,
+                    'testo_commento_padre' => $testo_commento_padre,
+                    'testo_risposta' => $testo
+                ]
+            );
             $messaggio = "✅ Risposta inserita con successo!";
         } else {
             $messaggio = "❌ Errore: " . $stmt->error;

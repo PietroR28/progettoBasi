@@ -28,10 +28,8 @@ if (isset($_SESSION['ruolo'])) {
 }
 
 // Connessione DB
-$conn = new mysqli("localhost", "root", "", "bostarter_db");
-if ($conn->connect_error) {
-    die("Connessione fallita: " . $conn->connect_error);
-}
+require_once __DIR__ . '/../mamp_xampp.php';
+
 
 echo "<h2>Profili richiesti nei progetti software</h2>";
 

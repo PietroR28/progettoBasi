@@ -5,10 +5,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 // Connessione al database
-$conn = new mysqli('localhost', 'root', '', 'bostarter_db');
-if ($conn->connect_error) {
-    die("Connessione fallita: " . $conn->connect_error);
-}
+require_once __DIR__ . '/../mamp_xampp.php';
 
 // Prendi i dati dal form
 $id_progetto = $_POST['id_progetto'];

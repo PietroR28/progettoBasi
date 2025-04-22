@@ -7,15 +7,7 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'creatore') {
 }
 
 // Connessione al database
-$host = 'localhost';
-$user = 'root';
-$password = '';
-$database = 'bostarter_db';
-
-$conn = new mysqli($host, $user, $password, $database);
-if ($conn->connect_error) {
-    die("Connessione fallita: " . $conn->connect_error);
-}
+require_once __DIR__ . '/../mamp_xampp.php';
 
 $messaggio = '';
 
@@ -33,10 +25,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bind_param("ssdssi", $nome, $descrizione, $budget, $data_limite, $tipo, $id_utente);
 
         if ($stmt->execute()) {
+            require_once __DIR__ . '/../mongoDB/mongodb.php';
+        
+            log_event(
+                'PROGETTO_CREATO',
+                $_SESSION['email'],
+                "Il creatore '{$_SESSION['email']}' ha creato un nuovo progetto.",
+                [
+                    'nome_progetto' => $nome,
+                    'budget' => $budget,
+                    'tipo' => $tipo,
+                    'data_limite' => $data_limite
+                ]
+            );
+        
             $messaggio = "✅ Progetto inserito con successo!";
         } else {
             $messaggio = "❌ Errore durante l'inserimento: " . $stmt->error;
-        }
+        }        
         $stmt->close();
     } else {
         $messaggio = "⚠️ Compila tutti i campi correttamente.";

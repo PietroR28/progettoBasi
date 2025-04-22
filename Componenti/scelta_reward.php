@@ -8,15 +8,7 @@ if (!isset($_SESSION['id_utente'])) {
 }
 
 // Connessione al database
-$host = "localhost";
-$user = "root";
-$password = "";
-$database = "bostarter_db";
-$connessione = new mysqli($host, $user, $password, $database);
-
-if ($connessione->connect_error) {
-    die("Errore di connessione: " . $connessione->connect_error);
-}
+require_once __DIR__ . '/../mamp_xampp.php';
 
 $messaggio = "";
 $id_utente = $_SESSION['id_utente'];

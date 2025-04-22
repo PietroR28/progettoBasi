@@ -1,0 +1,15 @@
+# Composer vendor directory
+/vendor/
+
+# File temporanei e di debug
+*.log
+*.tmp
+
+# File di configurazione locale
+.env
+
+# File di sistema macOS
+.DS_Store
+
+# Composer standalone file
+composer.phar

@@ -5,15 +5,7 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 // Connessione al DB
-$host = 'localhost';
-$user = 'root';
-$password = '';
-$database = 'bostarter_db';
-
-$conn = new mysqli($host, $user, $password, $database);
-if ($conn->connect_error) {
-    die("Connessione fallita: " . $conn->connect_error);
-}
+require_once __DIR__ . '/../mamp_xampp.php';
 
 $statoFiltro = $_GET['stato'] ?? '';
 $tipoFiltro = $_GET['tipo'] ?? '';
@@ -67,6 +59,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['commento'], $_GET['id
         $stmt->bind_param('sii', $commento, $id_progetto, $id_utente);
 
         if ($stmt->execute()) {
+            $id_commento = $stmt->insert_id;
+            require_once __DIR__ . '/../mongoDB/mongodb.php';
+
+            log_event(
+                'COMMENTO_INSERITO',
+                $_SESSION['email'],
+                "L'utente '{$_SESSION['email']}' ha inserito un commento al progetto ID $id_progetto.",
+                [
+                    'id_progetto' => $id_progetto,
+                    'id_utente' => $_SESSION['id_utente'],
+                    'id_commento' => $id_commento,
+                    'testo_commento' => $commento
+                ]
+            );
+            
             header("Location: visualizza_progetto.php?stato=" . urlencode($statoFiltro) . "&tipo=" . urlencode($tipoFiltro));
             exit;
         } else {

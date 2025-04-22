@@ -22,10 +22,8 @@ function getConnection() {
     $password = "";
     $database = "bostarter_db";
     
-    $conn = new mysqli($host, $user, $password, $database);
-    if ($conn->connect_error) {
-        die("Errore di connessione: " . $conn->connect_error);
-    }
+    require_once __DIR__ . '/../mamp_xampp.php';
+
     return $conn;
 }
 

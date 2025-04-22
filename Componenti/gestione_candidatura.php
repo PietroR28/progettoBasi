@@ -5,10 +5,7 @@ if (!isset($_SESSION['id_utente'])) {
 }
 $id_creatore = $_SESSION['id_utente'];
 
-$conn = new mysqli("localhost", "root", "", "bostarter_db");
-if ($conn->connect_error) {
-    die("Connessione fallita: " . $conn->connect_error);
-}
+require_once __DIR__ . '/../mamp_xampp.php';
 
 echo "<h2>Candidature ricevute</h2>";
 

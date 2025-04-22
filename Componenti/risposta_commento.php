@@ -5,15 +5,7 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 // Connessione al DB
-$host = 'localhost';
-$user = 'root';
-$password = '';
-$database = 'bostarter_db';
-
-$conn = new mysqli($host, $user, $password, $database);
-if ($conn->connect_error) {
-    die("Connessione fallita: " . $conn->connect_error);
-}
+require_once __DIR__ . '/../mamp_xampp.php';
 
 $statoFiltro = $_GET['stato'] ?? '';
 $tipoFiltro = $_GET['tipo'] ?? '';

@@ -279,28 +279,17 @@
 
 <?php
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $host = "localhost";
-    $user = "root";
-    $password = "";
-    $database = "bostarter_db";
-
-    // Crea connessione
-    $connessione = new mysqli($host, $user, $password, $database);
-
-    // Verifica connessione
-    if ($connessione->connect_error) {
-        $error_message = "Errore di connessione: " . $connessione->connect_error;
-        die($error_message);
-    }
+    require_once __DIR__ . '/../mamp_xampp.php';
+    require_once __DIR__ . '/../mongoDB/mongodb.php'; // log_event()
 
     // Ottieni e sanitizza i dati dal form
-    $email = $connessione->real_escape_string($_POST['email']);
-    $nickname = $connessione->real_escape_string($_POST['nickname']);
-    $nome = $connessione->real_escape_string($_POST['nome']);
-    $cognome = $connessione->real_escape_string($_POST['cognome']);
+    $email = $conn->real_escape_string($_POST['email']);
+    $nickname = $conn->real_escape_string($_POST['nickname']);
+    $nome = $conn->real_escape_string($_POST['nome']);
+    $cognome = $conn->real_escape_string($_POST['cognome']);
     $annoNascita = (int)$_POST['anno_nascita'];
-    $luogoNascita = $connessione->real_escape_string($_POST['luogo_nascita']);
-    $ruolo = $connessione->real_escape_string($_POST['ruolo']);
+    $luogoNascita = $conn->real_escape_string($_POST['luogo_nascita']);
+    $ruolo = $conn->real_escape_string($_POST['ruolo']);
     
     // Il codice di sicurezza è necessario solo per amministratori
     $codiceSicurezza = ($ruolo === 'amministratore' && isset($_POST['codice_sicurezza'])) ? $connessione->real_escape_string($_POST['codice_sicurezza']) : '';
@@ -311,7 +300,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     try {
         // Chiamata alla stored procedure per la registrazione
-        $stmt = $connessione->prepare("CALL registrazione(?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $conn->prepare("CALL registrazione(?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->bind_param("ssssissss", 
             $email, 
             $nickname, 
@@ -324,7 +313,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $codiceSicurezza
         );
         
-        if ($stmt->execute()) {
+        if ($stmt->execute()) {// MongoDB logging
+            require_once __DIR__ . '/../mongoDB/mongodb.php'; // percorso adattalo se serve
+
+            log_event(
+                'REGISTRAZIONE_UTENTE',
+                $email,
+                "L'utente '$email',ha completato la registrazione.",
+                [
+                    'nickname' => $nickname,
+                    'nome' => $nome,
+                    'cognome' => $cognome,
+                    'anno_nascita' => $annoNascita,
+                    'luogo_nascita' => $luogoNascita,
+                    'ruolo' => $ruolo
+                ]
+            );
+
             $success_message = "Registrazione avvenuta con successo!";
             echo "<script>
                 alert('Registrazione avvenuta con successo!');
@@ -345,7 +350,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </script>";
     }
     
-    $connessione->close();
+    $conn->close();
 }
 ?>
 </body>

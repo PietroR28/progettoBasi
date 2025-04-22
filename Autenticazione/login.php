@@ -29,64 +29,39 @@ $is_admin = false;
 
 // Gestione del form di login
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $host = "localhost";
-    $user = "root";
-    $password = "";
-    $database = "bostarter_db";
+    require_once __DIR__ . '/../mamp_xampp.php'; // Connessione centralizzata
 
-    // Crea connessione
-    $connessione = new mysqli($host, $user, $password, $database);
-
-    // Verifica connessione
-    if ($connessione->connect_error) {
-        $error_message = "Errore di connessione: " . $connessione->connect_error;
-    } else {
-        // Ottieni e sanitizza i dati dal form
-        $email = $connessione->real_escape_string($_POST['email']);
-        $email_value = $email; // Memorizza per il form
-        $password = $_POST['password'];
+    // Ottieni e sanitizza i dati dal form
+    $email = $conn->real_escape_string($_POST['email']);
+    $email_value = $email; // Memorizza per il form
+    $password = $_POST['password'];
+    
+    try {
+        // Chiamata alla stored procedure per l'autenticazione
+        $stmt = $conn->prepare("CALL autenticazione(?)");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
         
-        try {
-            // Chiamata alla stored procedure per l'autenticazione
-            $stmt = $connessione->prepare("CALL autenticazione(?)");
-            $stmt->bind_param("s", $email);
-            $stmt->execute();
-            $result = $stmt->get_result();
+        if ($result->num_rows > 0) {
+            // Utente trovato
+            $user = $result->fetch_assoc();
             
-            if ($result->num_rows > 0) {
-                // Utente trovato
-                $user = $result->fetch_assoc();
-                
-                // Verifica la password
-                if (password_verify($password, $user['password'])) {
-                    // Per gli amministratori, verifica anche il codice di sicurezza
-                    if ($user['ruolo'] === 'amministratore') {
-                        $is_admin = true; // Segna l'utente come admin
-                        
-                        if (!isset($_POST['codice_sicurezza']) || empty($_POST['codice_sicurezza'])) {
-                            // Mostra il campo per il codice di sicurezza
-                            $error_message = "Per completare l'accesso come amministratore, inserisci il codice di sicurezza.";
-                            $show_security_code = true;
-                        } 
-                        elseif ($_POST['codice_sicurezza'] !== $user['codice_sicurezza']) {
-                            // Il codice è stato fornito ma è errato
-                            $error_message = "Codice di sicurezza non valido. Riprova.";
-                            $show_security_code = true;
-                        } 
-                        else {
-                            // Password e codice corretti, crea la sessione
-                            $_SESSION['id_utente'] = $user['id_utente'];
-                            $_SESSION['email'] = $user['email'];
-                            $_SESSION['nickname'] = $user['nickname'];
-                            $_SESSION['nome'] = $user['nome'];
-                            $_SESSION['cognome'] = $user['cognome'];
-                            $_SESSION['ruolo'] = $user['ruolo'];
-                            
-                            header("Location: home_amministratore.php");
-                            exit;
-                        }
-                    } else {
-                        // Per utenti normali o creatori, basta la password
+            // Verifica la password
+            if (password_verify($password, $user['password'])) {
+                // Per gli amministratori, verifica anche il codice di sicurezza
+                if ($user['ruolo'] === 'amministratore') {
+                    $is_admin = true; // Segna l'utente come admin
+                    
+                    if (!isset($_POST['codice_sicurezza']) || empty($_POST['codice_sicurezza'])) {
+                        $error_message = "Per completare l'accesso come amministratore, inserisci il codice di sicurezza.";
+                        $show_security_code = true;
+                    } 
+                    elseif ($_POST['codice_sicurezza'] !== $user['codice_sicurezza']) {
+                        $error_message = "Codice di sicurezza non valido. Riprova.";
+                        $show_security_code = true;
+                    } 
+                    else {
                         $_SESSION['id_utente'] = $user['id_utente'];
                         $_SESSION['email'] = $user['email'];
                         $_SESSION['nickname'] = $user['nickname'];
@@ -94,31 +69,40 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         $_SESSION['cognome'] = $user['cognome'];
                         $_SESSION['ruolo'] = $user['ruolo'];
                         
-                        if ($user['ruolo'] === 'creatore') {
-                            header("Location: home_creatore.php");
-                            exit;
-                        } else {
-                            header("Location: home_utente.php");
-                            exit;
-                        }
+                        header("Location: home_amministratore.php");
+                        exit;
                     }
                 } else {
-                    // Password errata
-                    $error_message = "Password non corretta. Riprova.";
+                    $_SESSION['id_utente'] = $user['id_utente'];
+                    $_SESSION['email'] = $user['email'];
+                    $_SESSION['nickname'] = $user['nickname'];
+                    $_SESSION['nome'] = $user['nome'];
+                    $_SESSION['cognome'] = $user['cognome'];
+                    $_SESSION['ruolo'] = $user['ruolo'];
+                    
+                    if ($user['ruolo'] === 'creatore') {
+                        header("Location: home_creatore.php");
+                        exit;
+                    } else {
+                        header("Location: home_utente.php");
+                        exit;
+                    }
                 }
             } else {
-                // Utente non trovato
-                $error_message = "Nessun account trovato con questa email.";
+                $error_message = "Password non corretta. Riprova.";
             }
-            
-            $stmt->close();
-        } catch (Exception $e) {
-            $error_message = "Si è verificato un errore: " . $e->getMessage();
+        } else {
+            $error_message = "Nessun account trovato con questa email.";
         }
         
-        $connessione->close();
+        $stmt->close();
+    } catch (Exception $e) {
+        $error_message = "Si è verificato un errore: " . $e->getMessage();
     }
+    
+    $conn->close();
 }
+
 ?>
 
 

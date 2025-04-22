@@ -4,10 +4,7 @@ if (!isset($_SESSION['id_utente'])) {
     die("Accesso negato.");
 }
 
-$conn = new mysqli("localhost", "root", "", "bostarter_db");
-if ($conn->connect_error) {
-    die("Connessione fallita: " . $conn->connect_error);
-}
+require_once __DIR__ . '/../mamp_xampp.php';
 
 // Dati ricevuti dal form
 $id_candidatura = $_POST['id_candidatura'] ?? null;
