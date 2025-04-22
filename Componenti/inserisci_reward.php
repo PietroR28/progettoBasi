@@ -8,21 +8,13 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'creatore') {
 }
 
 // Connessione al database
-$host = "localhost";
-$user = "root";
-$password = "";
-$database = "bostarter_db";
-$connessione = new mysqli($host, $user, $password, $database);
-
-if ($connessione->connect_error) {
-    die("Errore di connessione: " . $connessione->connect_error);
-}
+require_once __DIR__ . '/../mamp_xampp.php';
 
 $messaggio = "";
 $id_utente = $_SESSION['id_utente'];
 
 // Recupera i progetti del creatore
-$stmt = $connessione->prepare("
+$stmt = $conn->prepare("
     SELECT id_progetto, nome 
     FROM progetto 
     WHERE id_utente_creatore = ?
@@ -68,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['descrizione'], $_POST
     
     if (empty($messaggio)) {
         // Chiamata alla stored procedure per inserire la reward
-        $stmt = $connessione->prepare("CALL InserisciReward(?, ?, ?)");
+        $stmt = $conn->prepare("CALL InserisciReward(?, ?, ?)");
         $stmt->bind_param("ssi", $descrizione, $foto_path, $id_progetto);
         $stmt->execute();
         
@@ -85,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['descrizione'], $_POST
     }
 }
 
-$connessione->close();
+$conn->close();
 ?>
 
 <!DOCTYPE html>
