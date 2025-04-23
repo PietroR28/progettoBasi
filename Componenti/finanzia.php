@@ -17,22 +17,17 @@ $progetti_disponibili = [];
 
 // Connessione al database - crea una nuova connessione per ogni operazione
 function getConnection() {
-    $host = "localhost";
-    $user = "root";
-    $password = "";
-    $database = "bostarter_db";
-    
-    require_once __DIR__ . '/../mamp_xampp.php';
+    require __DIR__ . '/../mamp_xampp.php'; // importa $conn
 
-    return $conn;
+    return $conn; // ora è definita grazie all'inclusione
 }
 
 // Recupera i progetti disponibili usando la SP
 if (!$id_progetto) {
-    $connessione = getConnection();
+    $conn = getConnection();
     try {
         // Chiamata alla stored procedure per ottenere i progetti disponibili
-        $stmt = $connessione->prepare("CALL VisualizzaProgettiDisponibili()");
+        $stmt = $conn->prepare("CALL VisualizzaProgettiDisponibili()");
         $stmt->execute();
         $result = $stmt->get_result();
         
@@ -44,13 +39,13 @@ if (!$id_progetto) {
     } catch (Exception $e) {
         $message = "Errore durante il recupero dei progetti: " . $e->getMessage();
     }
-    $connessione->close();
+    $conn->close();
 }
 
 // Verifica l'esistenza del progetto e recupera informazioni importanti
 if ($id_progetto > 0) {
-    $connessione = getConnection();
-    $stmt = $connessione->prepare("SELECT p.id_progetto, p.nome, p.budget, p.stato, p.data_limite, p.descrizione 
+    $conn = getConnection();
+    $stmt = $conn->prepare("SELECT p.id_progetto, p.nome, p.budget, p.stato, p.data_limite, p.descrizione 
                                   FROM progetto p
                                   WHERE p.id_progetto = ? AND p.stato = 'aperto'");
     $stmt->bind_param("i", $id_progetto);
@@ -65,7 +60,7 @@ if ($id_progetto > 0) {
     }
     
     $stmt->close();
-    $connessione->close();
+    $conn->close();
 }
 
 // Gestione del finanziamento
@@ -137,7 +132,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['importo']) && $id_prog
         
         <?php if ($message): ?>
             <div class="alert <?php echo (strpos($message, 'Errore') === 0) ? 'alert-danger' : 'alert-success'; ?>">
-                <?php echo $message; ?>
+        <?php echo $message; ?>
             </div>
         <?php endif; ?>
         

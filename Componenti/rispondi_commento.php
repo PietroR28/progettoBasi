@@ -19,7 +19,24 @@ require_once __DIR__ . '/../mamp_xampp.php';
 
 $messaggio = '';
 
-// Recupera il commento padre
+// Verifica che l'utente sia il creatore del progetto
+$autorizzato = false;
+$stmt = $conn->prepare("SELECT id_utente_creatore FROM progetto WHERE id_progetto = ?");
+$stmt->bind_param("i", $id_progetto);
+$stmt->execute();
+$stmt->bind_result($id_utente_creatore);
+if ($stmt->fetch()) {
+    if ($id_utente_creatore === $_SESSION['id_utente']) {
+        $autorizzato = true;
+    }
+}
+$stmt->close();
+
+if (!$autorizzato) {
+    die("⛔ Non sei autorizzato a rispondere a commenti su questo progetto.");
+}
+
+// Recupera il testo del commento padre
 $testo_commento_padre = '';
 $stmt = $conn->prepare("SELECT testo FROM commento WHERE id_commento = ?");
 $stmt->bind_param("i", $id_commento_padre);
@@ -29,38 +46,58 @@ $stmt->fetch();
 $stmt->close();
 
 // Gestione invio risposta
+$countRisposte = 0;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['testo'])) {
     $testo = trim($_POST['testo']);
     $id_utente = $_SESSION['id_utente'];
 
     if (!empty($testo)) {
-        $stmt = $conn->prepare("INSERT INTO commento (testo, data, id_progetto, id_utente, id_commento_padre) VALUES (?, NOW(), ?, ?, ?)");
-        $stmt->bind_param("siii", $testo, $id_progetto, $id_utente, $id_commento_padre);
+        // Verifica se esiste già una risposta
+        $checkStmt = $conn->prepare("SELECT COUNT(*) FROM commento WHERE id_commento_padre = ?");
+        $checkStmt->bind_param("i", $id_commento_padre);
+        $checkStmt->execute();
+        $checkStmt->bind_result($countRisposte);
+        $checkStmt->fetch();
+        $checkStmt->close();
 
-        if ($stmt->execute()) {
-            require_once __DIR__ . '/../mongoDB/mongodb.php';
-
-            log_event(
-                'RISPOSTA_COMMENTO',
-                $_SESSION['email'],
-                "L'utente {$_SESSION['email']} ha risposto al commento ID $id_commento_padre sul progetto ID $id_progetto.",
-                [
-                    'id_utente' => $id_utente,
-                    'id_progetto' => $id_progetto,
-                    'id_commento_padre' => $id_commento_padre,
-                    'id_commento' => $id_commento,
-                    'testo_commento_padre' => $testo_commento_padre,
-                    'testo_risposta' => $testo
-                ]
-            );
-            $messaggio = "✅ Risposta inserita con successo!";
+        if ($countRisposte > 0) {
+            $messaggio = "⚠️ Esiste già una risposta per questo commento. È possibile inserirne solo una.";
         } else {
-            $messaggio = "❌ Errore: " . $stmt->error;
+            $stmt = $conn->prepare("INSERT INTO commento (testo, data, id_progetto, id_utente, id_commento_padre) VALUES (?, NOW(), ?, ?, ?)");
+            $stmt->bind_param("siii", $testo, $id_progetto, $id_utente, $id_commento_padre);
+
+            if ($stmt->execute()) {
+                require_once __DIR__ . '/../mongoDB/mongodb.php';
+
+                log_event(
+                    'RISPOSTA_COMMENTO',
+                    $_SESSION['email'],
+                    "L'utente {$_SESSION['email']} ha risposto al commento ID $id_commento_padre sul progetto ID $id_progetto.",
+                    [
+                        'id_utente' => $id_utente,
+                        'id_progetto' => $id_progetto,
+                        'id_commento_padre' => $id_commento_padre,
+                        'testo_commento_padre' => $testo_commento_padre,
+                        'testo_risposta' => $testo
+                    ]
+                );
+                $messaggio = "✅ Risposta inserita con successo!";
+            } else {
+                $messaggio = "❌ Errore: " . $stmt->error;
+            }
+            $stmt->close();
         }
-        $stmt->close();
     } else {
         $messaggio = "⚠️ Il campo testo non può essere vuoto.";
     }
+} else {
+    // Calcola countRisposte anche per disabilitare il form
+    $checkStmt = $conn->prepare("SELECT COUNT(*) FROM commento WHERE id_commento_padre = ?");
+    $checkStmt->bind_param("i", $id_commento_padre);
+    $checkStmt->execute();
+    $checkStmt->bind_result($countRisposte);
+    $checkStmt->fetch();
+    $checkStmt->close();
 }
 
 // Recupera il commento originale
@@ -79,33 +116,47 @@ $stmt->close();
 <head>
     <meta charset="UTF-8">
     <title>Rispondi al commento</title>
+    <link rel="stylesheet" href="/progettoBasi/Stile/rispondi_commento.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body>
-    <h2>Risposta a un commento</h2>
+    <div class="container mt-5">
+        <div class="container-box">
+            <h2 class="mb-4">Risposta a un commento</h2>
 
-    <?php if (!empty($messaggio)) echo "<p><strong>$messaggio</strong></p>"; ?>
+            <?php if (!empty($messaggio)) echo "<div class='alert alert-info'>$messaggio</div>"; ?>
 
-    <?php if ($commento): ?>
-        <h4>🗨 Commento originale</h4>
-        <blockquote style="background-color: #f0f0f0; padding: 10px; border-left: 4px solid #ccc;">
-            <p><strong><?= htmlspecialchars($commento['nickname']) ?></strong> - <?= htmlspecialchars($commento['data']) ?></p>
-            <p><?= nl2br(htmlspecialchars($commento['testo'])) ?></p>
-        </blockquote>
-    <?php else: ?>
-        <p>⚠️ Commento non trovato.</p>
-    <?php endif; ?>
+            <?php if ($commento): ?>
+                <h5>💬 Commento originale</h5>
+                <blockquote>
+                    <p><strong><?= htmlspecialchars($commento['nickname']) ?></strong> - <?= htmlspecialchars($commento['data']) ?></p>
+                    <p><?= nl2br(htmlspecialchars($commento['testo'])) ?></p>
+                </blockquote>
+            <?php else: ?>
+                <div class="alert alert-warning">⚠️ Commento non trovato.</div>
+            <?php endif; ?>
 
-    <h4>✍ Scrivi la tua risposta</h4>
-    <form method="POST">
-        <textarea name="testo" rows="4" cols="60" required></textarea><br><br>
-        <button type="submit">Invia risposta</button>
-    </form>
+            <?php if ($countRisposte == 0): ?>
+                <h5 class="mt-4">✍🏼 Scrivi la tua risposta</h5>
+                <form method="POST">
+                    <div class="mb-3">
+                        <textarea class="form-control" name="testo" rows="4" required placeholder="Scrivi qui la tua risposta..."></textarea>
+                    </div>
+                    <button class="btn btn-secondary">Invia risposta</button>
 
-    <br>
-    <a href="../Componenti/risposta_commento.php" style="text-decoration: none;">
-    <button type="button" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
-        Torna ai progetti
-    </button>
-    </a>
+                </form>
+            <?php else: ?>
+                <div class="alert alert-success mt-4">✅ Hai già risposto a questo commento.</div>
+            <?php endif; ?>
+
+            <div class="text-center home-button-container">
+                <a href="../Componenti/risposta_commento.php" class="btn btn-success">
+                     Torna ai progetti
+                </a>
+            </div>
+
+        </div>
+    </div>
 </body>
 </html>

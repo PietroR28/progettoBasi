@@ -21,7 +21,7 @@ require_once __DIR__ . '/../mamp_xampp.php';
 
 
 // Esegui la stored procedure
-$stmt = $connessione->prepare("CALL InserisciCandidatura(?, ?)");
+$stmt = $conn->prepare("CALL InserisciCandidatura(?, ?)");
 if (!$stmt) {
     die("Errore nella preparazione della query: " . $conn->error);
 }
@@ -36,5 +36,5 @@ if ($stmt->execute()) {
 }
 
 $stmt->close();
-$connessione->close();
+$conn->close();
 ?>

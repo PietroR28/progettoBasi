@@ -1,0 +1,28 @@
+body {
+    background-color: #f9fafb;
+}
+
+.container-box {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin-top: 50px;
+}
+
+blockquote {
+    background-color: #f0f0f0;
+    padding: 15px;
+    border-left: 4px solid #ccc;
+    border-radius: 6px;
+}
+
+textarea {
+    resize: vertical;
+}
+
+.home-button-container {
+    margin-top: 3rem;
+    margin-bottom: 3rem; /* oppure più, se vuoi più spazio */
+}
+

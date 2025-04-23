@@ -7,13 +7,18 @@ error_reporting(E_ALL);
 // Connessione al DB
 require_once __DIR__ . '/../mamp_xampp.php';
 
+$id_utente = $_SESSION['id_utente'] ?? null;
+if (!$id_utente) {
+    die("Errore: utente non loggato.");
+}
+
 // Se è stato inviato il form
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_competenza = $_POST['id_competenza'] ?? null;
     $livello = $_POST['livello'] ?? null;
 
     if ($id_competenza && $livello) {
-        $stmt = $connessione->prepare("CALL InserisciSkillCurriculum(?, ?, ?)");
+        $stmt = $conn->prepare("CALL InserisciSkillCurriculum(?, ?, ?)");
         $stmt->bind_param("iis", $id_utente, $id_competenza, $livello);
 
         if ($stmt->execute()) {
@@ -26,6 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $messaggio = "⚠️ Devi selezionare una competenza e un livello.";
     }
 }
+
 
 // Carica tutte le competenze disponibili
 $lista_competenze = [];

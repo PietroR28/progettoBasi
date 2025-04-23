@@ -1,0 +1,25 @@
+body {
+    background-color: #f8f9fa;
+}
+
+.card {
+    border: none;
+    border-radius: 12px;
+}
+
+.card-title {
+    color: #343a40;
+}
+
+.home-button-container {
+    margin-bottom: 80px;
+}
+
+.list-group-item {
+    line-height: 1.6;
+}
+
+.home-button-container {
+    margin-top: 3rem;
+    margin-bottom: 3rem; 
+}

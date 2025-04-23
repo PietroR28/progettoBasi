@@ -1,0 +1,12 @@
+body {
+    background-color: #f8f9fa;
+}
+
+.competenza select {
+    margin-bottom: 0.5rem;
+}
+
+.home-button-container {
+    margin-top: 3rem;
+    margin-bottom: 3rem; 
+}

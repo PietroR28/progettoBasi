@@ -1,0 +1,36 @@
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.card-header {
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #343a40;
+}
+
+.alert {
+    font-size: 1rem;
+    border-radius: 8px;
+}
+
+button.btn-success {
+    padding: 10px 25px;
+    font-size: 1rem;
+}
+
+.home-button-container {
+    margin-top: 3rem;
+    margin-bottom: 3rem; 
+}
+

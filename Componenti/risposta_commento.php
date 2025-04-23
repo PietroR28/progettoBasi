@@ -93,99 +93,105 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <title>Rispondi ai commenti</title>
+    <link rel="stylesheet" href="../Stile/risposta_commento.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <h2>Filtra i progetti disponibili</h2>
+<div class="container mt-5">
+    <div class="filtro-box mb-5">
+        <h2 class="mb-4">Filtra i progetti disponibili</h2>
 
-    <form method="GET" action="risposta_commento.php">
-        <label for="stato">Stato progetto:</label>
-        <select name="stato" required>
-            <option disabled <?= !isset($_GET['stato']) ? 'selected' : '' ?>>Seleziona</option>
-            <option value="tutti" <?= ($statoFiltro ?? '') === 'tutti' ? 'selected' : '' ?>>Tutti</option>
-            <option value="aperto" <?= ($statoFiltro ?? '') === 'aperto' ? 'selected' : '' ?>>Aperto</option>
-            <option value="chiuso" <?= ($statoFiltro ?? '') === 'chiuso' ? 'selected' : '' ?>>Chiuso</option>
-        </select>
-
-        <label for="tipo">Tipo:</label>
-        <select name="tipo" required>
-            <option disabled <?= !isset($_GET['tipo']) ? 'selected' : '' ?>>Seleziona</option>
-            <option value="tutti" <?= ($tipoFiltro ?? '') === 'tutti' ? 'selected' : '' ?>>Tutti</option>
-            <option value="hardware" <?= ($tipoFiltro ?? '') === 'hardware' ? 'selected' : '' ?>>Hardware</option>
-            <option value="software" <?= ($tipoFiltro ?? '') === 'software' ? 'selected' : '' ?>>Software</option>
-        </select>
-
-        <button type="submit">Filtra</button>
-    </form>
-
-    <hr>
+        <form method="GET" action="risposta_commento.php" class="row g-3">
+            <div class="col-md-6">
+                <label for="stato" class="form-label">Stato progetto</label>
+                <select name="stato" class="form-select" required>
+                    <option disabled <?= !isset($_GET['stato']) ? 'selected' : '' ?>>Seleziona</option>
+                    <option value="tutti" <?= ($statoFiltro ?? '') === 'tutti' ? 'selected' : '' ?>>Tutti</option>
+                    <option value="aperto" <?= ($statoFiltro ?? '') === 'aperto' ? 'selected' : '' ?>>Aperto</option>
+                    <option value="chiuso" <?= ($statoFiltro ?? '') === 'chiuso' ? 'selected' : '' ?>>Chiuso</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="tipo" class="form-label">Tipo</label>
+                <select name="tipo" class="form-select" required>
+                    <option disabled <?= !isset($_GET['tipo']) ? 'selected' : '' ?>>Seleziona</option>
+                    <option value="tutti" <?= ($tipoFiltro ?? '') === 'tutti' ? 'selected' : '' ?>>Tutti</option>
+                    <option value="hardware" <?= ($tipoFiltro ?? '') === 'hardware' ? 'selected' : '' ?>>Hardware</option>
+                    <option value="software" <?= ($tipoFiltro ?? '') === 'software' ? 'selected' : '' ?>>Software</option>
+                </select>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-success">Filtra</button>
+            </div>
+        </form>
+    </div>
 
     <?php if (!empty($progetti)): ?>
-    <h3>Progetti trovati:</h3>
-    <ul>
-        <?php foreach ($progetti as $progetto): ?>
-            <li>
-                <h4><?= htmlspecialchars($progetto['nome']) ?></h4>
-                <p><strong>Tipo:</strong> <?= htmlspecialchars($progetto['tipo']) ?></p>
-                <p><strong>Stato:</strong> <?= htmlspecialchars($progetto['stato']) ?></p>
-                <p><strong>Descrizione:</strong> <?= htmlspecialchars($progetto['descrizione']) ?></p>
-                <p><strong>Budget:</strong> €<?= htmlspecialchars($progetto['budget']) ?></p>
-                <p><strong>Data limite:</strong> <?= htmlspecialchars($progetto['data_limite']) ?></p>
-                <hr>
+        <h3 class="mb-4">Progetti trovati:</h3>
+        <div class="row row-cols-1 g-4">
+            <?php foreach ($progetti as $progetto): ?>
+                <div class="col">
+                    <div class="card shadow-sm p-4">
+                        <h4><?= htmlspecialchars($progetto['nome']) ?></h4>
+                        <p><strong>Tipo:</strong> <?= htmlspecialchars($progetto['tipo']) ?></p>
+                        <p><strong>Stato:</strong> <?= htmlspecialchars($progetto['stato']) ?></p>
+                        <p><strong>Descrizione:</strong> <?= htmlspecialchars($progetto['descrizione']) ?></p>
+                        <p><strong>Budget:</strong> €<?= htmlspecialchars($progetto['budget']) ?></p>
+                        <p><strong>Data limite:</strong> <?= htmlspecialchars($progetto['data_limite']) ?></p>
 
-                <h4>Commenti:</h4>
-                <ul>
-                    <?php if (empty($progetto['commenti'])): ?>
-                        <li>Non ci sono commenti ancora.</li>
-                    <?php else: ?>
-                        <?php foreach ($progetto['commenti'] as $commento): ?>
-                            <li>
-                                <strong><?= htmlspecialchars($commento['nickname']) ?></strong> - <?= htmlspecialchars($commento['data']) ?>
-                                <p><?= nl2br(htmlspecialchars($commento['testo'])) ?></p>
+                        <hr>
 
-                                <!-- Bottone Rispondi -->
-                                <a href="rispondi_commento.php?id_progetto=<?= $progetto['id_progetto'] ?>&id_commento=<?= $commento['id_commento'] ?>">
-                                    <button>Rispondi</button>
-                                </a>
+                        <h5>Commenti:</h5>
+                        <?php if (empty($progetto['commenti'])): ?>
+                            <p class="text-muted">Non ci sono commenti ancora.</p>
+                        <?php else: ?>
+                            <ul class="list-group mb-3">
+                                <?php foreach ($progetto['commenti'] as $commento): ?>
+                                    <li class="list-group-item">
+                                        <strong><?= htmlspecialchars($commento['nickname']) ?></strong> - <?= htmlspecialchars($commento['data']) ?>
+                                        <p><?= nl2br(htmlspecialchars($commento['testo'])) ?></p>
 
-                                <!-- Risposte -->
-                                <?php if (!empty($commento['risposte'])): ?>
-                                    <ul style="margin-left: 20px;">
-                                        <?php foreach ($commento['risposte'] as $risposta): ?>
-                                            <li>
-                                                <strong><?= htmlspecialchars($risposta['nickname']) ?></strong> - <?= htmlspecialchars($risposta['data']) ?>
-                                                <p><?= nl2br(htmlspecialchars($risposta['testo'])) ?></p>
-                                            </li>
-                                        <?php endforeach; ?>
-                                    </ul>
-                                <?php endif; ?>
-                            </li>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </ul>
+                                        <a href="rispondi_commento.php?id_progetto=<?= $progetto['id_progetto'] ?>&id_commento=<?= $commento['id_commento'] ?>" class="btn btn-outline-success btn-sm mb-2">
+                                            Rispondi
+                                        </a>
 
-                <!-- Form per inserire un nuovo commento -->
-                <h4>Aggiungi un commento</h4>
-                <form method="POST" action="risposta_commento.php?id_progetto=<?= $progetto['id_progetto'] ?>&stato=<?= urlencode($statoFiltro) ?>&tipo=<?= urlencode($tipoFiltro) ?>">
-                    <textarea name="commento" required placeholder="Scrivi il tuo commento..."></textarea>
-                    <br>
-                    <button type="submit">Aggiungi commento</button>
-                </form>
+                                        <?php if (!empty($commento['risposte'])): ?>
+                                            <ul class="list-group list-group-flush ms-3">
+                                                <?php foreach ($commento['risposte'] as $risposta): ?>
+                                                    <li class="list-group-item">
+                                                        <strong><?= htmlspecialchars($risposta['nickname']) ?></strong> - <?= htmlspecialchars($risposta['data']) ?>
+                                                        <p><?= nl2br(htmlspecialchars($risposta['testo'])) ?></p>
+                                                    </li>
+                                                <?php endforeach; ?>
+                                            </ul>
+                                        <?php endif; ?>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php endif; ?>
 
-                <hr>
-            </li>
-        <?php endforeach; ?>
-    </ul>
-<?php else: ?>
-    <p><strong>Nessun progetto trovato con i filtri selezionati.</strong></p>
-<?php endif; ?>
+                        <!-- Nuovo commento -->
+                        <form method="POST" action="risposta_commento.php?id_progetto=<?= $progetto['id_progetto'] ?>&stato=<?= urlencode($statoFiltro) ?>&tipo=<?= urlencode($tipoFiltro) ?>">
+                            <div class="mb-3">
+                                <textarea name="commento" class="form-control" required placeholder="Scrivi il tuo commento..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-success">Aggiungi commento</button>
+                        </form>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php else: ?>
+        <p class="text-danger"><strong>Nessun progetto trovato con i filtri selezionati.</strong></p>
+    <?php endif; ?>
 
-
-    <div style="margin-top: 40px; text-align: center;">
-    <a href="../Autenticazione/home_creatore.php" style="text-decoration: none;">
-    <button type="button" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+    <div class="text-center mt-5 home-button-container">
+    <a href="../Autenticazione/home_creatore.php" class="btn btn-success">
         Torna alla Home
-    </button>
     </a>
     </div>
+
+</div>
 </body>
 </html>
+

@@ -49,7 +49,7 @@ if ($id_finanziamento > 0) {
 $rewards = [];
 if ($id_progetto > 0) {
     // Chiamata alla stored procedure per visualizzare le reward del progetto
-    $stmt = $connessione->prepare("CALL VisualizzaRewardProgetto(?)");
+    $stmt = $conn->prepare("CALL VisualizzaRewardProgetto(?)");
     $stmt->bind_param("i", $id_progetto);
     $stmt->execute();
     $rewards = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_reward'])) {
     $id_finanziamento = intval($_POST['id_finanziamento']);
 
     // Chiamata alla stored procedure per assegnare la reward
-    $stmt = $connessione->prepare("CALL AssegnaReward(?, ?, ?)");
+    $stmt = $conn->prepare("CALL AssegnaReward(?, ?, ?)");
     $stmt->bind_param("iii", $id_utente, $id_finanziamento, $id_reward);
     $stmt->execute();
     
@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_reward'])) {
     $stmt->close();
 }
 
-$connessione->close();
+$conn->close();
 ?>
 
 <!DOCTYPE html>
