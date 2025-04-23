@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['descrizione'], $_POST
     
     if (empty($messaggio)) {
         // Chiamata alla stored procedure per inserire la reward
-        $stmt = $conn->prepare("CALL AssegnaReward(?, ?, ?)");
+        $stmt = $conn->prepare("CALL InserisciReward(?, ?, ?)");
         $stmt->bind_param("ssi", $descrizione, $foto_path, $id_progetto);
         $stmt->execute();
         
