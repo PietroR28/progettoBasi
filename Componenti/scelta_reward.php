@@ -20,7 +20,7 @@ $nome_progetto = "";
 
 // Verifica se il finanziamento appartiene all'utente corrente
 if ($id_finanziamento > 0) {
-    $stmt = $connessione->prepare("
+    $stmt = $conn->prepare("
         SELECT f.id_finanziamento, f.importo, f.data, p.nome as nome_progetto, p.id_progetto
         FROM finanziamento f
         JOIN progetto p ON f.id_progetto = p.id_progetto
