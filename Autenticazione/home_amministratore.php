@@ -106,7 +106,7 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'amministratore') {
 
         <!-- Statistiche globali -->
         <div class="col">
-            <a href="componenti/statistiche_globali.php" class="text-decoration-none text-dark">
+            <a href="../Componenti/statistiche_globali.php" class="text-decoration-none text-dark">
                 <div class="card card-hover shadow-sm h-100">
                     <div class="card-body">
                         <h5 class="card-title">📊 Statistiche</h5>

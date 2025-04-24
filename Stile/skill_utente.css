@@ -1,0 +1,20 @@
+.home-button-container {
+    margin-top: 3rem;
+    margin-bottom: 3rem; /* oppure più, se vuoi più spazio */
+}
+
+.btn-like-input {
+    background-color: white;
+    border: 1px solid #ced4da;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.9375rem;
+    color: #495057;
+    transition: all 0.2s ease-in-out;
+    height: 38px;
+}
+
+.btn-like-input:hover {
+    background-color: #f8f9fa;
+    border-color: #adb5bd;
+}
