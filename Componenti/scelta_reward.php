@@ -88,29 +88,7 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scegli Reward - BOSTARTER</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .reward-card {
-            transition: transform 0.2s;
-            cursor: pointer;
-            border: 2px solid transparent;
-        }
-        .reward-card:hover {
-            transform: scale(1.02);
-            border-color: #4CAF50;
-        }
-        .reward-card.selected {
-            border-color: #4CAF50;
-            background-color: #f0fff0;
-        }
-        .reward-image {
-            max-height: 200px;
-            width: auto;
-            object-fit: contain;
-            margin-top: 10px;
-            border-radius: 5px;
-            display: block;
-        }
-    </style>
+    <link href="../Stile/scelta_reward.css" rel="stylesheet">
 </head>
 <body>
     <div class="container mt-4">
@@ -130,7 +108,7 @@ $conn->close();
                         } else {
                             echo 'home_utente.php';
                         }
-                    ?>" class="btn btn-primary">Torna alla Home</a>
+                    ?>" class="btn btn-success">Torna alla Home</a>
                 </p>
             </div>
         <?php elseif ($id_finanziamento && $id_progetto): ?>
@@ -141,7 +119,7 @@ $conn->close();
             <?php endif; ?>
             
             <div class="card shadow-sm mb-4">
-                <div class="card-header bg-info text-white">
+                <div class="card-header bg-danger text-white">
                     <h5 class="mb-0">Rewards disponibili per <?php echo htmlspecialchars($nome_progetto); ?></h5>
                 </div>
                 <div class="card-body">
@@ -158,7 +136,7 @@ $conn->close();
                                 } else {
                                     echo 'home_utente.php';
                                 }
-                            ?>" class="btn btn-secondary">Torna alla Home</a>
+                            ?>" class="btn btn-success">Torna alla Home</a>
                         </div>
                     <?php else: ?>
                         <form method="POST">
@@ -193,7 +171,7 @@ $conn->close();
                                 <?php endforeach; ?>
                             </div>
                             
-                            <button type="submit" class="btn btn-primary mt-4">Scegli questa reward</button>
+                            <button type="submit" class="btn btn-success mt-4">Scegli questa reward</button>
                         </form>
                     <?php endif; ?>
                 </div>

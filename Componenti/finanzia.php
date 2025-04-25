@@ -156,7 +156,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['importo']) && $id_prog
                             <td><?php echo htmlspecialchars($progetto['nome']); ?></td>
                             <td><?php echo htmlspecialchars(substr($progetto['descrizione'], 0, 100)) . (strlen($progetto['descrizione']) > 100 ? '...' : ''); ?></td>
                             <td><?php echo date('d/m/Y', strtotime($progetto['data_inserimento'])); ?></td>
-                            <td><a href="finanzia.php?id=<?php echo $progetto['id_progetto']; ?>" class="btn btn-primary btn-sm">Seleziona</a></td>
+                            <td><a href="finanzia.php?id=<?php echo $progetto['id_progetto']; ?>" class="btn btn-danger btn-sm">Seleziona</a></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -204,7 +204,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['importo']) && $id_prog
                     </div>
                     <div class="d-flex">
                         <a href="finanzia.php" class="btn btn-secondary me-2">Torna alla lista</a>
-                        <button type="submit" class="btn btn-primary">Finanzia</button>
+                        <button type="submit" class="btn btn-danger">Finanzia</button>
                     </div>
                 </form>
             </div>
@@ -219,7 +219,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['importo']) && $id_prog
         <a href="../Autenticazione/<?php 
             echo ($_SESSION['ruolo'] === 'amministratore') ? 'home_amministratore.php' :
                  (($_SESSION['ruolo'] === 'creatore') ? 'home_creatore.php' : 'home_utente.php');
-        ?>" class="btn btn-secondary">Torna alla Home</a>
+        ?>" class="btn btn-success">Torna alla Home</a>
     </div>
 </body>
 </html>

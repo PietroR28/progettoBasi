@@ -102,170 +102,61 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     $conn->close();
 }
-
 ?>
-
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - BoStarter</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
-        
-        body {
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        
-        .login-container {
-            width: 100%;
-            max-width: 400px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 30px;
-        }
-        
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        
-        form {
-            width: 100%;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-        
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            width: 100%;
-        }
-        
-        button:hover {
-            background-color: #45a049;
-        }
-        
-        p {
-            text-align: center;
-            margin-top: 20px;
-        }
-        
-        a {
-            color: #4CAF50;
-            text-decoration: none;
-        }
-        
-        a:hover {
-            text-decoration: underline;
-        }
-        
-        .message {
-            font-size: 14px;
-            margin-top: 10px;
-            text-align: center;
-            padding: 8px;
-            border-radius: 4px;
-        }
-        
-        .error-message {
-            color: white;
-            background-color: #f44336;
-        }
-        
-        .success-message {
-            color: white;
-            background-color: #4CAF50;
-        }
-        
-        .admin-notice {
-            background-color: #f9f9f9;
-            padding: 12px;
-            border-left: 4px solid #4CAF50;
-            margin-bottom: 15px;
-        }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../Stile/login.css" rel="stylesheet">
 </head>
-<body>
+
+<body class="d-flex align-items-center justify-content-center min-vh-100 bg-light">
     <div class="login-container">
-        <h1>ACCESSO</h1>
-        
+        <h1 class="login-title"> <strong> ACCESSO </strong></h1>
+
         <form method="post">
             <?php if ($is_admin && $show_security_code): ?>
-                <!-- Form per amministratori che devono inserire il codice di sicurezza -->
                 <div class="admin-notice">
-                    <p>Accesso come <strong>amministratore</strong>.<br>
-                    Inserisci il codice di sicurezza per completare l'accesso.</p>
+                    Accesso come <strong>amministratore</strong>. Inserisci il codice di sicurezza per completare l'accesso.
                 </div>
-                
-                <input type="hidden" name="email" value="<?php echo htmlspecialchars($email_value); ?>">
-                <input type="hidden" name="password" value="<?php echo htmlspecialchars($_POST['password']); ?>">
-                
-                <div class="form-group">
-                    <label for="codice_sicurezza">Codice di sicurezza</label>
-                    <input type="password" id="codice_sicurezza" name="codice_sicurezza" required autofocus>
+
+                <input type="hidden" name="email" value="<?= htmlspecialchars($email_value); ?>">
+                <input type="hidden" name="password" value="<?= htmlspecialchars($_POST['password']); ?>">
+
+                <div class="mb-3">
+                    <label for="codice_sicurezza" class="form-label">Codice di sicurezza</label>
+                    <input type="password" id="codice_sicurezza" name="codice_sicurezza" class="form-control" required autofocus>
                 </div>
-                
-                <button type="submit">Completa Accesso</button>
+
+                <button type="submit" class="btn-login">Completa Accesso</button>
             <?php else: ?>
-                <!-- Form standard di login -->
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($email_value); ?>" required>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" id="email" name="email" value="<?= htmlspecialchars($email_value); ?>" class="form-control" required>
                 </div>
-                
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" name="password" class="form-control" required>
                 </div>
-                
-                <button type="submit">Accedi</button>
+
+                <button type="submit" class="btn-login">Accedi</button>
             <?php endif; ?>
         </form>
-        
-        <?php if(!$is_admin): ?>
-        <p>Non hai un account? <a href="../Autenticazione/registrazione.php">Registrati</a></p>
+
+        <?php if (!$is_admin): ?>
+            <p class="mt-3 text-center">Non hai un account? <a href="../Autenticazione/registrazione.php" class="text-danger">Registrati</a></p>
         <?php endif; ?>
-        
-        <?php if(isset($error_message)): ?>
-            <div class="message error-message"><?php echo $error_message; ?></div>
+
+        <?php if (isset($error_message)): ?>
+            <div class="message error-message"><?= $error_message ?></div>
         <?php endif; ?>
-        
-        <?php if(isset($success_message)): ?>
-            <div class="message success-message"><?php echo $success_message; ?></div>
+
+        <?php if (isset($success_message)): ?>
+            <div class="message success-message"><?= $success_message ?></div>
         <?php endif; ?>
     </div>
 </body>

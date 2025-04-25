@@ -9,10 +9,9 @@ require_once __DIR__ . '/../mamp_xampp.php';
 
 $statoFiltro = $_GET['stato'] ?? '';
 $tipoFiltro = $_GET['tipo'] ?? '';
-
 $progetti = [];
 
-// Filtraggio dei progetti
+// Filtro progetti
 if (($statoFiltro !== 'tutti' && !empty($statoFiltro)) || ($tipoFiltro !== 'tutti' && !empty($tipoFiltro))) {
     $query = "SELECT * FROM progetto WHERE 1=1";
     $params = [];
@@ -48,7 +47,45 @@ if (($statoFiltro !== 'tutti' && !empty($statoFiltro)) || ($tipoFiltro !== 'tutt
     }
 }
 
-// Caricamento commenti e risposte
+// Inserimento commenti (solo commenti principali)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['commento'], $_GET['id_progetto'])) {
+    $id_progetto = (int)$_GET['id_progetto'];
+    $commento = trim($_POST['commento']);
+
+    if (isset($_SESSION['id_utente']) && !empty($_SESSION['id_utente'])) {
+        $id_utente = (int)$_SESSION['id_utente'];
+
+        $stmt = $conn->prepare("INSERT INTO commento (testo, id_progetto, id_utente, data, id_commento_padre) VALUES (?, ?, ?, NOW(), NULL)");
+        $stmt->bind_param('sii', $commento, $id_progetto, $id_utente);
+
+        if ($stmt->execute()) {
+            $id_commento = $stmt->insert_id;
+            require_once __DIR__ . '/../mongoDB/mongodb.php';
+
+            log_event(
+                'COMMENTO_INSERITO',
+                $_SESSION['email'],
+                "L'utente '{$_SESSION['email']}' ha inserito un commento al progetto ID $id_progetto.",
+                [
+                    'id_progetto' => $id_progetto,
+                    'id_utente' => $_SESSION['id_utente'],
+                    'id_commento' => $id_commento,
+                    'testo_commento' => $commento
+                ]
+            );
+            
+            header("Location: risposta_commento.php?stato=" . urlencode($statoFiltro) . "&tipo=" . urlencode($tipoFiltro));
+            exit;
+        } else {
+            die("Errore SQL durante inserimento commento: " . $stmt->error);
+        }
+        $stmt->close();
+    } else {
+        die("Non hai effettuato l'accesso.");
+    }
+}
+
+// Recupera commenti e risposte per ogni progetto
 foreach ($progetti as $index => $progetto) {
     $commenti = [];
 
@@ -62,17 +99,17 @@ foreach ($progetti as $index => $progetto) {
     $result = $stmt->get_result();
 
     while ($row = $result->fetch_assoc()) {
-        // Recupera eventuali risposte
+        $row['risposte'] = [];
+
         $substmt = $conn->prepare("SELECT c.testo, c.data, u.nickname 
                                    FROM commento c 
                                    JOIN utente u ON c.id_utente = u.id_utente 
-                                   WHERE id_commento_padre = ? 
+                                   WHERE c.id_commento_padre = ? 
                                    ORDER BY c.data ASC");
         $substmt->bind_param("i", $row['id_commento']);
         $substmt->execute();
         $subres = $substmt->get_result();
 
-        $row['risposte'] = [];
         while ($r = $subres->fetch_assoc()) {
             $row['risposte'][] = $r;
         }
@@ -87,7 +124,6 @@ foreach ($progetti as $index => $progetto) {
 
 $conn->close();
 ?>
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -175,7 +211,7 @@ $conn->close();
                             <div class="mb-3">
                                 <textarea name="commento" class="form-control" required placeholder="Scrivi il tuo commento..."></textarea>
                             </div>
-                            <button type="submit" class="btn btn-success">Aggiungi commento</button>
+                            <button type="submit" class="btn btn-danger">Aggiungi commento</button>
                         </form>
                     </div>
                 </div>

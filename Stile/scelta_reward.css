@@ -1,0 +1,8 @@
+.reward-card:hover {
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+}
+
+.reward-card.selected {
+    border: 2px solid #198754;
+    background-color: #eafaf1;
+}

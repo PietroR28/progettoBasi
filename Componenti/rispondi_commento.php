@@ -125,7 +125,7 @@ $stmt->close();
         <div class="container-box">
             <h2 class="mb-4">Risposta a un commento</h2>
 
-            <?php if (!empty($messaggio)) echo "<div class='alert alert-info'>$messaggio</div>"; ?>
+            <?php if (!empty($messaggio)) echo "<div class='alert alert-success'>$messaggio</div>"; ?>
 
             <?php if ($commento): ?>
                 <h5>💬 Commento originale</h5>
@@ -143,7 +143,7 @@ $stmt->close();
                     <div class="mb-3">
                         <textarea class="form-control" name="testo" rows="4" required placeholder="Scrivi qui la tua risposta..."></textarea>
                     </div>
-                    <button class="btn btn-secondary">Invia risposta</button>
+                    <button class="btn btn-danger">Invia risposta</button>
 
                 </form>
             <?php else: ?>
