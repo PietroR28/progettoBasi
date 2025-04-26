@@ -25,8 +25,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bind_param("ssdssi", $nome, $descrizione, $budget, $data_limite, $tipo, $id_utente);
 
         if ($stmt->execute()) {
-            require_once __DIR__ . '/../mongoDB/mongodb.php';
+            $id_progetto = $stmt->insert_id; // ID del progetto creato
         
+            $foto_caricate = []; // <-- array dove raccogliamo i percorsi delle foto
+        
+            // Gestione immagini multiple
+            if (isset($_FILES['foto']) && count($_FILES['foto']['name']) > 0) {
+                $allowed = ['jpg', 'jpeg', 'png', 'gif'];
+                $upload_dir = __DIR__ . '/../uploads/';
+        
+                if (!file_exists($upload_dir)) {
+                    mkdir($upload_dir, 0777, true);
+                }
+        
+                foreach ($_FILES['foto']['tmp_name'] as $key => $tmp_name) {
+                    if ($_FILES['foto']['error'][$key] === 0) {
+                        $ext = strtolower(pathinfo($_FILES['foto']['name'][$key], PATHINFO_EXTENSION));
+        
+                        if (in_array($ext, $allowed)) {
+                            $new_filename = uniqid() . '.' . $ext;
+                            $destination = $upload_dir . $new_filename;
+        
+                            if (move_uploaded_file($tmp_name, $destination)) {
+                                $relative_path = 'uploads/' . $new_filename;
+        
+                                // Salva nel database MySQL
+                                $stmtFoto = $conn->prepare("INSERT INTO foto_progetto (id_progetto, percorso) VALUES (?, ?)");
+                                $stmtFoto->bind_param("is", $id_progetto, $relative_path);
+                                $stmtFoto->execute();
+                                $stmtFoto->close();
+        
+                                // Aggiungiamo il percorso all'array foto_caricate
+                                $foto_caricate[] = $relative_path;
+                            }
+                        }
+                    }
+                }
+            }
+        
+            // Log evento su MongoDB
+            require_once __DIR__ . '/../mongoDB/mongodb.php';
             log_event(
                 'PROGETTO_CREATO',
                 $_SESSION['email'],
@@ -35,7 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'nome_progetto' => $nome,
                     'budget' => $budget,
                     'tipo' => $tipo,
-                    'data_limite' => $data_limite
+                    'data_limite' => $data_limite,
+                    'foto_progetto' => !empty($foto_caricate) ? $foto_caricate : ['nessuna']
                 ]
             );
         
@@ -73,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <h5 class="mb-0">Dettagli del progetto</h5>
             </div>
             <div class="card-body">
-                <form method="POST" action="">
+                <form method="POST" action="" enctype="multipart/form-data">
                     <div class="mb-3">
                         <label for="nome" class="form-label">Nome progetto:</label>
                         <input type="text" name="nome" id="nome" class="form-control" required>
@@ -103,17 +142,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </select>
                     </div>
 
+                    <div class="mb-3">
+                        <label for="foto" class="form-label">Foto del progetto (selezionare più file se desiderato):</label>
+                        <input type="file" name="foto[]" id="foto" class="form-control" multiple accept="image/*" required>
+                    </div>
+
                     <button type="submit" class="btn btn-success">Crea Progetto</button>
                 </form>
             </div>
         </div>
 
         <div class="text-center mt-5 home-button-container">
-        <a href="../Autenticazione/home_creatore.php" class="btn btn-success">
-             Torna alla Home
-        </a>
-    </div>
+            <a href="../Autenticazione/home_creatore.php" class="btn btn-success">
+                Torna alla Home
+            </a>
+        </div>
     </div>
 </body>
-
 </html>

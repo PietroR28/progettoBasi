@@ -37,12 +37,36 @@ if (($statoFiltro !== 'tutti' && !empty($statoFiltro)) || ($tipoFiltro !== 'tutt
     $stmt->execute();
     $result = $stmt->get_result();
     while ($row = $result->fetch_assoc()) {
+        // Carica la prima foto associata al progetto
+        $stmtFoto = $conn->prepare("SELECT percorso FROM foto_progetto WHERE id_progetto = ? LIMIT 1");
+        $stmtFoto->bind_param('i', $row['id_progetto']);
+        $stmtFoto->execute();
+        $resFoto = $stmtFoto->get_result();
+        if ($foto = $resFoto->fetch_assoc()) {
+            $row['foto'] = $foto['percorso'];
+        } else {
+            $row['foto'] = null;
+        }
+        $stmtFoto->close();
+
         $progetti[] = $row;
     }
     $stmt->close();
 } elseif ($statoFiltro === 'tutti' && $tipoFiltro === 'tutti') {
     $result = $conn->query("SELECT * FROM progetto");
     while ($row = $result->fetch_assoc()) {
+        // Carica la prima foto associata al progetto
+        $stmtFoto = $conn->prepare("SELECT percorso FROM foto_progetto WHERE id_progetto = ? LIMIT 1");
+        $stmtFoto->bind_param('i', $row['id_progetto']);
+        $stmtFoto->execute();
+        $resFoto = $stmtFoto->get_result();
+        if ($foto = $resFoto->fetch_assoc()) {
+            $row['foto'] = $foto['percorso'];
+        } else {
+            $row['foto'] = null;
+        }
+        $stmtFoto->close();
+
         $progetti[] = $row;
     }
 }
@@ -167,54 +191,65 @@ $conn->close();
         <div class="row row-cols-1 g-4">
             <?php foreach ($progetti as $progetto): ?>
                 <div class="col">
-                    <div class="card shadow-sm p-4">
-                        <h4><?= htmlspecialchars($progetto['nome']) ?></h4>
-                        <p><strong>Tipo:</strong> <?= htmlspecialchars($progetto['tipo']) ?></p>
-                        <p><strong>Stato:</strong> <?= htmlspecialchars($progetto['stato']) ?></p>
-                        <p><strong>Descrizione:</strong> <?= htmlspecialchars($progetto['descrizione']) ?></p>
-                        <p><strong>Budget:</strong> €<?= htmlspecialchars($progetto['budget']) ?></p>
-                        <p><strong>Data limite:</strong> <?= htmlspecialchars($progetto['data_limite']) ?></p>
+                <div class="card shadow-sm p-4 mb=4">
+    <div class="row g-3 align-items-center">
+        <div class="col-md-9">
+            <h4><?= htmlspecialchars($progetto['nome']) ?></h4>
+            <p><strong>Tipo:</strong> <?= htmlspecialchars($progetto['tipo']) ?></p>
+            <p><strong>Stato:</strong> <?= htmlspecialchars($progetto['stato']) ?></p>
+            <p><strong>Descrizione:</strong> <?= htmlspecialchars($progetto['descrizione']) ?></p>
+            <p><strong>Budget:</strong> €<?= htmlspecialchars($progetto['budget']) ?></p>
+            <p><strong>Data limite:</strong> <?= htmlspecialchars($progetto['data_limite']) ?></p>
 
-                        <hr>
+            <hr>
 
-                        <h5>Commenti:</h5>
-                        <?php if (empty($progetto['commenti'])): ?>
-                            <p class="text-muted">Non ci sono commenti ancora.</p>
-                        <?php else: ?>
-                            <ul class="list-group mb-3">
-                                <?php foreach ($progetto['commenti'] as $commento): ?>
-                                    <li class="list-group-item">
-                                        <strong><?= htmlspecialchars($commento['nickname']) ?></strong> - <?= htmlspecialchars($commento['data']) ?>
-                                        <p><?= nl2br(htmlspecialchars($commento['testo'])) ?></p>
+            <h5>Commenti:</h5>
+            <?php if (empty($progetto['commenti'])): ?>
+                <p class="text-muted">Non ci sono commenti ancora.</p>
+            <?php else: ?>
+                <ul class="list-group mb-3">
+                    <?php foreach ($progetto['commenti'] as $commento): ?>
+                        <li class="list-group-item">
+                            <strong><?= htmlspecialchars($commento['nickname']) ?></strong> - <?= htmlspecialchars($commento['data']) ?>
+                            <p><?= nl2br(htmlspecialchars($commento['testo'])) ?></p>
 
-                                        <a href="rispondi_commento.php?id_progetto=<?= $progetto['id_progetto'] ?>&id_commento=<?= $commento['id_commento'] ?>" class="btn btn-outline-success btn-sm mb-2">
-                                            Rispondi
-                                        </a>
+                            <a href="rispondi_commento.php?id_progetto=<?= $progetto['id_progetto'] ?>&id_commento=<?= $commento['id_commento'] ?>" class="btn btn-outline-success btn-sm mb-2">
+                                Rispondi
+                            </a>
 
-                                        <?php if (!empty($commento['risposte'])): ?>
-                                            <ul class="list-group list-group-flush ms-3">
-                                                <?php foreach ($commento['risposte'] as $risposta): ?>
-                                                    <li class="list-group-item">
-                                                        <strong><?= htmlspecialchars($risposta['nickname']) ?></strong> - <?= htmlspecialchars($risposta['data']) ?>
-                                                        <p><?= nl2br(htmlspecialchars($risposta['testo'])) ?></p>
-                                                    </li>
-                                                <?php endforeach; ?>
-                                            </ul>
-                                        <?php endif; ?>
-                                    </li>
-                                <?php endforeach; ?>
-                            </ul>
-                        <?php endif; ?>
+                            <?php if (!empty($commento['risposte'])): ?>
+                                <ul class="list-group list-group-flush ms-3">
+                                    <?php foreach ($commento['risposte'] as $risposta): ?>
+                                        <li class="list-group-item">
+                                            <strong><?= htmlspecialchars($risposta['nickname']) ?></strong> - <?= htmlspecialchars($risposta['data']) ?>
+                                            <p><?= nl2br(htmlspecialchars($risposta['testo'])) ?></p>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            <?php endif; ?>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php endif; ?>
 
-                        <!-- Nuovo commento -->
-                        <form method="POST" action="risposta_commento.php?id_progetto=<?= $progetto['id_progetto'] ?>&stato=<?= urlencode($statoFiltro) ?>&tipo=<?= urlencode($tipoFiltro) ?>">
-                            <div class="mb-3">
-                                <textarea name="commento" class="form-control" required placeholder="Scrivi il tuo commento..."></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-danger">Aggiungi commento</button>
-                        </form>
-                    </div>
+            <!-- Nuovo commento -->
+            <form method="POST" action="risposta_commento.php?id_progetto=<?= $progetto['id_progetto'] ?>&stato=<?= urlencode($statoFiltro) ?>&tipo=<?= urlencode($tipoFiltro) ?>">
+                <div class="mb-3">
+                    <textarea name="commento" class="form-control" required placeholder="Scrivi il tuo commento..."></textarea>
                 </div>
+                <button type="submit" class="btn btn-danger">Aggiungi commento</button>
+            </form>
+        </div>
+
+        <div class="col-md-3 text-center">
+            <?php if (!empty($progetto['foto'])): ?>
+                <img src="../<?= htmlspecialchars($progetto['foto']) ?>" alt="Foto Progetto" class="img-fluid rounded" style="max-width: 200px; max-height: 200px; object-fit: cover;">
+            <?php else: ?>
+                <img src="../uploads/placeholder.png" alt="Nessuna Immagine" class="img-fluid rounded" style="max-width: 200px; max-height: 200px; object-fit: cover;">
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
             <?php endforeach; ?>
         </div>
     <?php else: ?>
@@ -222,12 +257,11 @@ $conn->close();
     <?php endif; ?>
 
     <div class="text-center mt-5 home-button-container">
-    <a href="../Autenticazione/home_creatore.php" class="btn btn-success">
-        Torna alla Home
-    </a>
+        <a href="../Autenticazione/home_creatore.php" class="btn btn-success">
+            Torna alla Home
+        </a>
     </div>
 
 </div>
 </body>
 </html>
-
