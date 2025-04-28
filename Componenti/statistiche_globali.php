@@ -68,7 +68,7 @@ $conn->close();
 </head>
 <body>
     <div class="container mt-4">
-        <h1 class="mb-4">Statistiche Globali</h1>
+        <h1 class="mb-4">📊 Statistiche Globali</h1>
         
         <?php if (isset($error_message)): ?>
             <div class="alert alert-danger">
@@ -103,12 +103,26 @@ $conn->close();
                                         <td>€<?= number_format($progetto['totale_finanziamenti'], 2, ',', '.') ?></td>
                                         <td>€<?= number_format($progetto['differenza'], 2, ',', '.') ?></td>
                                         <td>
-                                            <div class="progress">
-                                                <div class="progress-bar bg-success" 
-                                                     style="width: <?= round($progetto['percentuale_completamento']) ?>%">
-                                                    <?= round($progetto['percentuale_completamento']) ?>%
-                                                </div>
-                                            </div>
+                                        <div class="progress" style="height: 25px;">
+                                        <div class="progress-bar 
+                                            <?php
+                                                $percentuale = round($progetto['percentuale_completamento']);
+                                                if ($percentuale <= 33) {
+                                                    echo 'bg-danger';
+                                                } elseif ($percentuale <= 70) {
+                                                    echo 'bg-warning';
+                                                } else {
+                                                    echo 'bg-success';
+                                                }
+                                            ?>"
+                                            role="progressbar"
+                                            style="width: <?= $percentuale ?>%;" 
+                                            aria-valuenow="<?= $percentuale ?>" 
+                                            aria-valuemin="0" 
+                                            aria-valuemax="100">
+                                            <?= $percentuale ?>%
+                                        </div>
+                                    </div>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -204,7 +218,7 @@ $conn->close();
                 } else {
                     echo 'home_utente.php';
                 }
-            ?>" class="btn btn-danger">
+            ?>" class="btn btn-success">
                 Torna alla Home
             </a>
         </div>

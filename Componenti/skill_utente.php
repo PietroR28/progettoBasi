@@ -121,7 +121,7 @@ $conn->close();
                         </select>
                     </div>
 
-                    <button type="submit" class="btn btn-success">💾 Salva competenza</button>
+                    <button type="submit" class="btn btn-success"> Salva competenza</button>
                 </form>
             </div>
         </div>

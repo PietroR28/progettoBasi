@@ -42,7 +42,7 @@ require_once __DIR__ . '/../mamp_xampp.php';
     ?>
         <div class="card mb-4 shadow-sm">
             <div class="card-body">
-                <h4 class="card-title">📦 <?= htmlspecialchars($progetto['nome']) ?></h4>
+                <h4 class="card-title"> <?= htmlspecialchars($progetto['nome']) ?></h4>
                 <p class="card-text"><?= htmlspecialchars($progetto['descrizione']) ?></p>
                 <hr>
 
@@ -101,7 +101,7 @@ require_once __DIR__ . '/../mamp_xampp.php';
                         } elseif ($tot == $ok) {
                             echo "<form method='POST' action='candidati.php' class='mt-2'>
                                     <input type='hidden' name='id_profilo' value='$id_profilo'>
-                                    <button type='submit' class='btn btn-success'>Candidati</button>
+                                    <button type='submit' class='btn btn-danger'>Candidati</button>
                                   </form>";
                         } else {
                             echo "<p class='text-danger'>❌ Non hai le competenze richieste per candidarti.</p>";

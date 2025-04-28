@@ -50,7 +50,7 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'utente') {
             <a href="../Componenti/visualizza_progetto.php" class="text-decoration-none text-dark">
                 <div class="card card-hover shadow-sm h-100">
                     <div class="card-body">
-                        <h5 class="card-title">📢 Progetti Disponibili</h5>
+                        <h5 class="card-title">📂 Progetti Disponibili</h5>
                         <p class="card-text">Consulta i progetti disponibili e commentali se necessario.</p>
                     </div>
                 </div>

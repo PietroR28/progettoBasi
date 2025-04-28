@@ -70,7 +70,7 @@ $notifiche = $row['tot'];
             <a href="../Componenti/risposta_commento.php" class="text-decoration-none text-dark">
                 <div class="card card-hover shadow-sm h-100">
                     <div class="card-body">
-                        <h5 class="card-title">📢 Progetti Disponibili</h5>
+                        <h5 class="card-title">📂 Progetti Disponibili</h5>
                         <p class="card-text">Consulta i progetti disponibili, commentali e rispondi ai commenti  se necessario.</p>
                     </div>
                 </div>
@@ -111,7 +111,7 @@ $notifiche = $row['tot'];
                         </span>
                     <?php endif; ?>
                     <div class="card-body">
-                        <h5 class="card-title">📋 Gestisci le Candidature</h5>
+                        <h5 class="card-title">📨 Gestisci le Candidature</h5>
                         <p class="card-text">Accetta o rifiuta una Candidatura per un tuo progetto software.</p>
                     </div>
                 </div>
@@ -123,36 +123,36 @@ $notifiche = $row['tot'];
             <a href="../Componenti/associa_profilo.php" class="text-decoration-none text-dark">
                 <div class="card card-hover shadow-sm h-100">
                     <div class="card-body">
-                        <h5 class="card-title">📋 Associa un Profilo</h5>
+                        <h5 class="card-title">👤 Associa un Profilo</h5>
                         <p class="card-text">Associa un profilo ad un Progetto Software.</p>
                     </div>
                 </div>
             </a>
         </div>
 
-<!-- Crea progetto -->
-<div class="col">
-            <a href="../Componenti/crea_progetto.php" class="text-decoration-none text-dark">
+        <!-- Crea progetto -->
+        <div class="col">
+                    <a href="../Componenti/crea_progetto.php" class="text-decoration-none text-dark">
+                        <div class="card card-hover shadow-sm h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">🛠️ Crea nuovo Progetto</h5>
+                                <p class="card-text">Inserisci un nuovo progetto.</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Inseriscii Reward -->
+        <div class="col">
+            <a href="../Componenti/inserisci_reward.php" class="text-decoration-none text-dark">
                 <div class="card card-hover shadow-sm h-100">
                     <div class="card-body">
-                        <h5 class="card-title">📋 Crea nuovo progetto</h5>
-                        <p class="card-text">Inserisci un nuovo progetto.</p>
+                        <h5 class="card-title">🎁 Inserisci Reward</h5>
+                        <p class="card-text">Crea e gestisci ricompense per i tuoi progetti.</p>
                     </div>
                 </div>
             </a>
         </div>
-
-        <!-- Inseriscii Reward -->
-<div class="col">
-    <a href="../Componenti/inserisci_reward.php" class="text-decoration-none text-dark">
-        <div class="card card-hover shadow-sm h-100">
-            <div class="card-body">
-                <h5 class="card-title">🎁 Inserisci Reward</h5>
-                <p class="card-text">Crea e gestisci ricompense per i tuoi progetti.</p>
-            </div>
-        </div>
-    </a>
-</div>
 
         <!-- Statistiche globali -->
         <div class="col">

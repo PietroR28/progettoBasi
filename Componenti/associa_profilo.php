@@ -58,7 +58,7 @@ require_once __DIR__ . '/../mamp_xampp.php';
 </head>
 <body>
 <div class="container mt-5">
-    <h2 class="mb-4">🧩 Associa un profilo a un progetto software</h2>
+    <h2 class="mb-4">👤 Associa un profilo a un progetto software</h2>
 
     <form method="POST" action="inserisci_profilo.php" class="shadow p-4 bg-white rounded">
         <div class="mb-3">
@@ -111,16 +111,16 @@ require_once __DIR__ . '/../mamp_xampp.php';
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <button type="button" class="btn btn-outline-danger" onclick="rimuoviCompetenza(this)">❌ Rimuovi</button>
+                    <button type="button" class="btn btn-danger" onclick="rimuoviCompetenza(this)">🗑️ Rimuovi</button>
                 </div>
             </div>
         </div>
 
         <div class="mb-3">
-            <button type="button" onclick="aggiungiCompetenza()" class="btn btn-outline-primary">➕ Aggiungi competenza</button>
+            <button type="button" onclick="aggiungiCompetenza()" class="btn btn-primary">➕ Aggiungi competenza</button>
         </div>
 
-        <button type="submit" class="btn btn-success">💾 Associa Profilo</button>
+        <button type="submit" class="btn btn-secondary"> Associa Profilo</button>
     </form>
 
     <div class="text-center mt-5 home-button-container">

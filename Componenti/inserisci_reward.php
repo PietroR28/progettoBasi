@@ -153,7 +153,7 @@ $conn->close();
     </div>
 
     <div class="mb-5">
-        <a href="../Autenticazione/home_creatore.php" class="btn btn-success">🏠 Torna alla Home</a>
+        <a href="../Autenticazione/home_creatore.php" class="btn btn-success"> Torna alla Home</a>
     </div>
 </div>
 </body>

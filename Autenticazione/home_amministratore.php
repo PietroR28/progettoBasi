@@ -49,7 +49,7 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'amministratore') {
             <a href="../Componenti/visualizza_progetto.php" class="text-decoration-none text-dark">
                 <div class="card card-hover shadow-sm h-100">
                     <div class="card-body">
-                        <h5 class="card-title">📢 Progetti Disponibili</h5>
+                        <h5 class="card-title">📂 Progetti Disponibili</h5>
                         <p class="card-text">Consulta i progetti disponibili e commentali se necessario.</p>
                     </div>
                 </div>
@@ -85,20 +85,8 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'amministratore') {
             <a href="../Componenti/inserisci_competenza.php" class="text-decoration-none text-dark">
                 <div class="card card-hover shadow-sm h-100">
                     <div class="card-body">
-                        <h5 class="card-title">💬 Aggiungi una Competenza</h5>
+                        <h5 class="card-title">➕ Aggiungi una Competenza</h5>
                         <p class="card-text">Inserisci una nuova stringa nella lista delle competenze.</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <!-- Inserisci competenza -->
-        <div class="col">
-            <a href="../Componenti/inserisci_competenza.php" class="text-decoration-none text-dark">
-                <div class="card card-hover shadow-sm h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">📊 Competenza</h5>
-                        <p class="card-text">Inserisci una nuova competenza.</p>
                     </div>
                 </div>
             </a>
