@@ -1,12 +1,10 @@
 <?php
 session_start();
 
-// Abilita errori
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Connessione al DB
 require_once __DIR__ . '/../mamp_xampp.php';
 
 $messaggio = "";
@@ -15,8 +13,8 @@ $errore = "";
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_progetto = $_POST['id_progetto'];
     $nome_profilo = $_POST['nome_profilo'];
-    $competenze = $_POST['competenze']; // array di id_competenza
-    $livelli = $_POST['livelli'];       // array di livelli
+    $competenze = $_POST['competenze']; 
+    $livelli = $_POST['livelli'];       
 
     if (count($competenze) !== count($livelli)) {
         $errore = "Errore: competenze e livelli non corrispondono.";

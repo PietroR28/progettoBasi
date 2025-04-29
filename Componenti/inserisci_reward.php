@@ -1,7 +1,6 @@
 <?php
 session_start();
 
-// Verifica che l'utente sia un creatore
 if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'creatore') {
     header("Location: ../Autenticazione/login.php");
     exit;

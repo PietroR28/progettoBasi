@@ -1,17 +1,14 @@
 <?php
 session_start();
 
-// Verifica che l'utente sia loggato e sia un creatore
 if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'creatore') {
     die("Accesso non autorizzato.");
 }
 
-// Connessione al database
 require_once __DIR__ . '/../mamp_xampp.php';
 
 $messaggio = '';
 
-// Gestione del form
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = trim($_POST['nome']);
     $descrizione = trim($_POST['descrizione']);

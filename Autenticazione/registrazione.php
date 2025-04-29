@@ -233,7 +233,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         );
         
         if ($stmt->execute()) {
-            require_once __DIR__ . '/../mongoDB/mongodb.php'; // percorso adattalo se serve
+            require_once __DIR__ . '/../mongoDB/mongodb.php'; 
 
             log_event(
                 'REGISTRAZIONE_UTENTE',

@@ -1,7 +1,6 @@
 <?php
 session_start();
 
-// Verifica che l'utente sia loggato
 if (!isset($_SESSION['id_utente'])) {
     header("Location: ../Autenticazione/login.php");
     exit;
@@ -15,7 +14,6 @@ $progetti_query = "SELECT * FROM progetti_vicini_completamento";
 $progetti_result = $conn->query($progetti_query);
 
 if (!$progetti_result) {
-    // Se la vista non esiste, mostra un messaggio di errore
     $error_message = "Errore: La vista 'progetti_vicini_completamento' non è disponibile. " . $conn->error;
     $progetti_top = [];
 } else {
@@ -30,7 +28,6 @@ $utenti_query = "SELECT * FROM top_utenti_finanziatori";
 $utenti_result = $conn->query($utenti_query);
 
 if (!$utenti_result) {
-    // Se la vista non esiste, mostra un messaggio di errore
     $error_message_utenti = "Errore: La vista 'top_utenti_finanziatori' non è disponibile. " . $conn->error;
     $utenti_top = [];
 } else {
@@ -45,7 +42,6 @@ $creatori_query = "SELECT * FROM top_creatori_affidabili";
 $creatori_result = $conn->query($creatori_query);
 
 if (!$creatori_result) {
-    // Se la vista non esiste, mostra un messaggio di errore
     $error_message_creatori = "Errore: La vista 'top_creatori_affidabili' non è disponibile. " . $conn->error;
     $creatori_top = [];
 } else {

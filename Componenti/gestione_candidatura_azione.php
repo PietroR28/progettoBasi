@@ -13,7 +13,6 @@ $azione = $_POST['azione'] ?? null;
 if ($id_candidatura <= 0 || !in_array($azione, ['accetta', 'rifiuta'])) {
     $errore = "❌ Dati non validi.";
 } else {
-    // Verifica proprietà candidatura
     $check = $conn->prepare("
         SELECT c.id_candidatura
         FROM candidatura c

@@ -1,20 +1,16 @@
 <?php
 session_start();
 
-// Mostra gli errori
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-// Verifica accesso utente
 if (!isset($_SESSION['id_utente'])) {
     die("Accesso negato. Effettua il login.");
 }
 
-// Parametri dalla query string
 $id_progetto = isset($_GET['id_progetto']) ? (int)$_GET['id_progetto'] : 0;
 $id_commento_padre = isset($_GET['id_commento']) ? (int)$_GET['id_commento'] : 0;
 
-// Connessione al DB
 require_once __DIR__ . '/../mamp_xampp.php';
 
 $messaggio = '';

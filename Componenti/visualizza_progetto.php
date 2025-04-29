@@ -4,7 +4,6 @@ session_start();
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-// Connessione al DB
 require_once __DIR__ . '/../mamp_xampp.php';
 
 $statoFiltro = $_GET['stato'] ?? '';
