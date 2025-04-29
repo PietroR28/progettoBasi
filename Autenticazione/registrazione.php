@@ -79,6 +79,8 @@
                     </div>
                 </div>
 
+                <div id="role-description" class="mt-3 text-center text-muted"></div>
+
                 <div class="form-row hidden mt-3" id="security_code_container">
                     <div class="form-group w-100">
                         <label for="codice_sicurezza">Codice di sicurezza</label>
@@ -108,13 +110,30 @@
         const ruolo = document.querySelector('input[name="ruolo"]:checked').value;
         const securityCodeContainer = document.getElementById('security_code_container');
         const securityCodeInput = document.getElementById('codice_sicurezza');
-        
+        const roleDescription = document.getElementById('role-description');
+
+        // Mostra o nasconde il codice di sicurezza
         if (ruolo === 'amministratore') {
             securityCodeContainer.classList.remove('hidden');
             securityCodeInput.setAttribute('required', '');
         } else {
             securityCodeContainer.classList.add('hidden');
             securityCodeInput.removeAttribute('required');
+        }
+
+        // Mostra descrizione in base al ruolo selezionato
+        switch (ruolo) {
+            case 'utente':
+                roleDescription.innerText = "Gli Utenti possono: aggiungere o aggiornare le proprie Skill, consultare i Progetti disponibili e commentarli, finanziare un Progetto, candidarsi allo sviluppo di un Progetto software e visualizzare le classifiche dei migliori utenti e progetti.";
+                break;
+            case 'amministratore':
+                roleDescription.innerText = "Gli Amministratori, oltre alle funzionalità di un Utente possono: aggiungere Competenze alla piattaforma";
+                break;
+            case 'creatore':
+                roleDescription.innerText = "I Creatori, oltre alle funzionalità di un Utente possono: rispondere ai commenti ricevuti (una risposta per commento), accettare o rifiutare una Candidatura ricevuta, associare un Profilo ad un progetto software, creare un nuovo Progetto e inserire delle Reward per i propri Progetti.";
+                break;
+            default:
+                roleDescription.innerText = "";
         }
     }
 
@@ -171,7 +190,11 @@
         // Se tutti i controlli sono passati, invia il form
         document.getElementById('submit_btn').click();
     }
+
+    // Appena si carica la pagina, imposta la descrizione giusta
+    document.addEventListener("DOMContentLoaded", toggleSecurityCode);
 </script>
+
 
 <?php
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -209,7 +232,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $codiceSicurezza
         );
         
-        if ($stmt->execute()) {// MongoDB logging
+        if ($stmt->execute()) {
             require_once __DIR__ . '/../mongoDB/mongodb.php'; // percorso adattalo se serve
 
             log_event(

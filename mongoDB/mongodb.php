@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . '/../vendor/autoload.php'; // Composer autoload
 
-// Connessione a MongoDB Atlas (sviluppo, bypass OCSP)
+// Connessione a MongoDB Atlas
 $mongoClient = new MongoDB\Client("mongodb+srv://tallaricoalessandro02:Talla200210@cluster0.ly8gp9z.mongodb.net/?retryWrites=true&w=majority&tls=true&tlsInsecure=true");
 
 // Selezione del database e collezione

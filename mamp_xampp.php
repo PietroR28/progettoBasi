@@ -1,8 +1,7 @@
 <?php
 // Scegliere "xampp" o "mamp" in base all'ambiente locale
-$ambiente = "mamp"; // ← cambia solo questa riga quando serve
+$ambiente = "mamp"; // cambiare solo questa riga quando serve
 
-// Impostazioni comuni
 $host = "localhost";
 $user = "root";
 $database = "bostarter_db";
