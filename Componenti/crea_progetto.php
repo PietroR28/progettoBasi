@@ -1,14 +1,17 @@
 <?php
 session_start();
 
+// Verifica che l'utente sia loggato e sia un creatore
 if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'creatore') {
     die("Accesso non autorizzato.");
 }
 
+// Connessione al database
 require_once __DIR__ . '/../mamp_xampp.php';
 
 $messaggio = '';
 
+// Gestione del form
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = trim($_POST['nome']);
     $descrizione = trim($_POST['descrizione']);
@@ -187,21 +190,22 @@ function aggiungiComponente() {
     div.className = "card p-3 mb-2";
 
     div.innerHTML = `
-        <div class="mb-2">
-            <label>Nome componente:</label>
-            <input type="text" name="componenti[\${contatoreComponenti}][nome]" class="form-control" required>
-        </div>
-        <div class="mb-2">
-            <label>Prezzo (€):</label>
-            <input type="number" name="componenti[\${contatoreComponenti}][prezzo]" class="form-control" step="0.01" required>
-        </div>
-        <div class="mb-2">
-            <label>Quantità:</label>
-            <input type="number" name="componenti[\${contatoreComponenti}][quantita]" class="form-control" min="1" required>
-        </div>
-        <button type="button" class="btn btn-danger" onclick="this.parentElement.remove()">🗑️ Rimuovi</button>
-        <hr>
-    `;
+    <div class="mb-2">
+        <label>Nome componente:</label>
+        <input type="text" name="componente[${contatoreComponenti}][nome]" class="form-control" required>
+    </div>
+    <div class="mb-2">
+        <label>Prezzo (€):</label>
+        <input type="number" name="componente[${contatoreComponenti}][prezzo]" class="form-control" step="0.01" required>
+    </div>
+    <div class="mb-2">
+        <label>Quantità:</label>
+        <input type="number" name="componente[${contatoreComponenti}][quantita]" class="form-control" min="1" required>
+    </div>
+    <button type="button" class="btn btn-danger" onclick="this.parentElement.remove()">🗑️ Rimuovi</button>
+    <hr>
+`;
+
 
     container.appendChild(div);
     contatoreComponenti++;
@@ -209,4 +213,3 @@ function aggiungiComponente() {
 </script>
 </body>
 </html>
-
