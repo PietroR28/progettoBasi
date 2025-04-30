@@ -1,12 +1,10 @@
 <?php
 session_start();
 
-// Verifica che l'utente sia loggato e sia un creatore
 if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'creatore') {
     die("Accesso non autorizzato.");
 }
 
-// Connessione al database
 require_once __DIR__ . '/../mamp_xampp.php';
 
 $messaggio = '';
@@ -71,7 +69,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            // Log evento su MongoDB
             require_once __DIR__ . '/../mongoDB/mongodb.php';
             log_event(
                 'PROGETTO_CREATO',
