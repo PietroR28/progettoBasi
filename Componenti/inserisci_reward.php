@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['descrizione'], $_POST
         $stmt->close();
 
         if ($row['id_reward'] > 0) {
-            // LOG MongoDB
+           
             try {
                 require_once __DIR__ . '/../mongoDB/mongodb.php';
 

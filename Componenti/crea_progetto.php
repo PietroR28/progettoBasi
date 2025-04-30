@@ -19,80 +19,93 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_utente = $_SESSION['id_utente'];
 
     if ($nome && $descrizione && $budget > 0 && $data_limite && $tipo) {
-        $stmt = $conn->prepare("CALL Crea_progetto(?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssdssi", $nome, $descrizione, $budget, $data_limite, $tipo, $id_utente);
 
-        if ($stmt->execute()) {
-            $result = $conn->query("SELECT LAST_INSERT_ID() AS id_progetto");
-            $row = $result->fetch_assoc();
-            $id_progetto = $row['id_progetto'];
-            $foto_caricate = [];
+        // ✅ Controllo che il nome progetto non esista già
+        $check = $conn->prepare("SELECT COUNT(*) as cnt FROM progetto WHERE nome = ?");
+        $check->bind_param("s", $nome);
+        $check->execute();
+        $check_result = $check->get_result()->fetch_assoc();
+        $check->close();
 
-            // Gestione componenti solo per hardware
-            if ($tipo === 'hardware' && !empty($_POST['componente'])) {
-                foreach ($_POST['componente'] as $comp) {
-                    $stmtComp = $conn->prepare("CALL Inserisci_componente(?, ?, ?, ?)");
-                    $stmtComp->bind_param("sdii", $comp['nome'], $comp['prezzo'], $comp['quantita'], $id_progetto);
-                    $stmtComp->execute();
-                    $stmtComp->close();
+        if ($check_result['cnt'] > 0) {
+            $messaggio = "⚠️ Esiste già un progetto con questo nome. Scegline un altro.";
+        } else {
+            $stmt = $conn->prepare("CALL Crea_progetto(?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("ssdssi", $nome, $descrizione, $budget, $data_limite, $tipo, $id_utente);
+
+            if ($stmt->execute()) {
+                $result = $conn->query("SELECT LAST_INSERT_ID() AS id_progetto");
+                $row = $result->fetch_assoc();
+                $id_progetto = $row['id_progetto'];
+                $foto_caricate = [];
+
+                // Componenti solo se hardware
+                if ($tipo === 'hardware' && !empty($_POST['componente'])) {
+                    foreach ($_POST['componente'] as $comp) {
+                        $stmtComp = $conn->prepare("CALL Inserisci_componente(?, ?, ?, ?)");
+                        $stmtComp->bind_param("sdii", $comp['nome'], $comp['prezzo'], $comp['quantita'], $id_progetto);
+                        $stmtComp->execute();
+                        $stmtComp->close();
+                    }
                 }
-            }
 
-            // Gestione immagini multiple
-            if (isset($_FILES['foto']) && count($_FILES['foto']['name']) > 0) {
-                $allowed = ['jpg', 'jpeg', 'png', 'gif'];
-                $upload_dir = __DIR__ . '/../uploads/';
+                // Gestione immagini
+                if (isset($_FILES['foto']) && count($_FILES['foto']['name']) > 0) {
+                    $allowed = ['jpg', 'jpeg', 'png', 'gif'];
+                    $upload_dir = __DIR__ . '/../uploads/';
 
-                if (!file_exists($upload_dir)) {
-                    mkdir($upload_dir, 0777, true);
-                }
+                    if (!file_exists($upload_dir)) {
+                        mkdir($upload_dir, 0777, true);
+                    }
 
-                foreach ($_FILES['foto']['tmp_name'] as $key => $tmp_name) {
-                    if ($_FILES['foto']['error'][$key] === 0) {
-                        $ext = strtolower(pathinfo($_FILES['foto']['name'][$key], PATHINFO_EXTENSION));
+                    foreach ($_FILES['foto']['tmp_name'] as $key => $tmp_name) {
+                        if ($_FILES['foto']['error'][$key] === 0) {
+                            $ext = strtolower(pathinfo($_FILES['foto']['name'][$key], PATHINFO_EXTENSION));
 
-                        if (in_array($ext, $allowed)) {
-                            $new_filename = uniqid() . '.' . $ext;
-                            $destination = $upload_dir . $new_filename;
+                            if (in_array($ext, $allowed)) {
+                                $new_filename = uniqid() . '.' . $ext;
+                                $destination = $upload_dir . $new_filename;
 
-                            if (move_uploaded_file($tmp_name, $destination)) {
-                                $relative_path = 'uploads/' . $new_filename;
-                                $stmtFoto = $conn->prepare("INSERT INTO foto_progetto (id_progetto, percorso) VALUES (?, ?)");
-                                $stmtFoto->bind_param("is", $id_progetto, $relative_path);
-                                $stmtFoto->execute();
-                                $stmtFoto->close();
+                                if (move_uploaded_file($tmp_name, $destination)) {
+                                    $relative_path = 'uploads/' . $new_filename;
+                                    $stmtFoto = $conn->prepare("INSERT INTO foto_progetto (id_progetto, percorso) VALUES (?, ?)");
+                                    $stmtFoto->bind_param("is", $id_progetto, $relative_path);
+                                    $stmtFoto->execute();
+                                    $stmtFoto->close();
 
-                                $foto_caricate[] = $relative_path;
+                                    $foto_caricate[] = $relative_path;
+                                }
                             }
                         }
                     }
                 }
+
+                require_once __DIR__ . '/../mongoDB/mongodb.php';
+                log_event(
+                    'PROGETTO_CREATO',
+                    $_SESSION['email'],
+                    "Il creatore '{$_SESSION['email']}' ha creato un nuovo progetto.",
+                    [
+                        'nome_progetto' => $nome,
+                        'budget' => $budget,
+                        'tipo' => $tipo,
+                        'data_limite' => $data_limite,
+                        'foto_progetto' => !empty($foto_caricate) ? $foto_caricate : ['nessuna']
+                    ]
+                );
+
+                $messaggio = "✅ Progetto inserito con successo!";
+            } else {
+                $messaggio = "❌ Errore durante l'inserimento: " . $stmt->error;
             }
-
-            require_once __DIR__ . '/../mongoDB/mongodb.php';
-            log_event(
-                'PROGETTO_CREATO',
-                $_SESSION['email'],
-                "Il creatore '{$_SESSION['email']}' ha creato un nuovo progetto.",
-                [
-                    'nome_progetto' => $nome,
-                    'budget' => $budget,
-                    'tipo' => $tipo,
-                    'data_limite' => $data_limite,
-                    'foto_progetto' => !empty($foto_caricate) ? $foto_caricate : ['nessuna']
-                ]
-            );
-
-            $messaggio = "✅ Progetto inserito con successo!";
-        } else {
-            $messaggio = "❌ Errore durante l'inserimento: " . $stmt->error;
+            $stmt->close();
         }
-        $stmt->close();
     } else {
         $messaggio = "⚠️ Compila tutti i campi correttamente.";
     }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="it">
@@ -106,11 +119,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="container mt-4">
     <h1 class="mb-4">🚀 Inserisci un nuovo progetto</h1>
 
-    <?php if (!empty($messaggio)): ?>
-        <div class="alert <?php echo strpos($messaggio, '✅') === 0 ? 'alert-success' : 'alert-danger'; ?>">
-            <?php echo $messaggio; ?>
-        </div>
-    <?php endif; ?>
+
+        <?php if (!empty($messaggio)): ?>
+            <div class="alert <?php echo strpos($messaggio, '✅') === 0 ? 'alert-success' : 'alert-danger'; ?> text-center fw-semibold fs-5 shadow-sm">
+                <?php echo htmlspecialchars($messaggio); ?>
+            </div>
+        <?php endif; ?>
+
+
 
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-danger text-white">
