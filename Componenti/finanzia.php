@@ -37,14 +37,29 @@ if (!$id_progetto) {
 }
 
 if ($id_progetto > 0) {
-    $conn = getConnection();
-    $stmt = $conn->prepare("SELECT id_progetto, nome, budget, stato, data_limite, descrizione FROM progetto WHERE id_progetto = ? AND stato = 'aperto'");
-    $stmt->bind_param("i", $id_progetto);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $progetto_exists = ($result->num_rows > 0);
-    if ($progetto_exists) {
-        $progetto_info = $result->fetch_assoc();
+    // Verifica se l'utente ha già finanziato oggi questo progetto
+        $ha_gia_finanziato_oggi = false;
+        if (isset($_SESSION['id_utente'])) {
+            $oggi = date('Y-m-d');
+            $conn = getConnection();
+            $stmt_check = $conn->prepare("SELECT COUNT(*) AS count FROM finanziamento WHERE id_utente = ? AND id_progetto = ? AND DATE(data) = ?");
+            $stmt_check->bind_param("iis", $_SESSION['id_utente'], $id_progetto, $oggi);
+            $stmt_check->execute();
+            $res_check = $stmt_check->get_result();
+            $row_check = $res_check->fetch_assoc();
+            $ha_gia_finanziato_oggi = ($row_check['count'] > 0);
+            $stmt_check->close();
+            $conn->close();
+        }
+
+        $conn = getConnection();
+        $stmt = $conn->prepare("SELECT id_progetto, nome, budget, stato, data_limite, descrizione FROM progetto WHERE id_progetto = ? AND stato = 'aperto'");
+        $stmt->bind_param("i", $id_progetto);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $progetto_exists = ($result->num_rows > 0);
+        if ($progetto_exists) {
+            $progetto_info = $result->fetch_assoc();
 
         $stmt_fin = $conn->prepare("SELECT SUM(importo) as totale FROM finanziamento WHERE id_progetto = ?");
         $stmt_fin->bind_param("i", $id_progetto);
@@ -68,59 +83,76 @@ if ($id_progetto > 0) {
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['importo']) && $id_progetto > 0) {
     $importo = floatval(str_replace(',', '.', $_POST['importo']));
     $id_utente = $_SESSION['id_utente'];
+
     try {
         $conn1 = getConnection();
-        $stmt = $conn1->prepare("CALL InserisciFinanziamento(?, ?, ?)");
-        $stmt->bind_param("iid", $id_utente, $id_progetto, $importo);
-        if ($stmt->execute()) {
-            $stmt->close();
+
+        // Controllo: un solo finanziamento al giorno per ciascun progetto per utente
+        $oggi = date('Y-m-d');
+        $stmt_check = $conn1->prepare("SELECT COUNT(*) AS count FROM finanziamento WHERE id_utente = ? AND id_progetto = ? AND DATE(data) = ?");
+        $stmt_check->bind_param("iis", $id_utente, $id_progetto, $oggi);
+        $stmt_check->execute();
+        $res_check = $stmt_check->get_result();
+        $row_check = $res_check->fetch_assoc();
+        $stmt_check->close();
+
+        if ($row_check['count'] > 0) {
+            $message = "Hai già finanziato questo progetto oggi. Puoi farlo di nuovo domani oppure scegliere un altro progetto.";
             $conn1->close();
-            $conn2 = getConnection();
-            $query = "SELECT MAX(id_finanziamento) as id FROM finanziamento WHERE id_utente = ? AND id_progetto = ? ORDER BY data DESC LIMIT 1";
-            $stmt_id = $conn2->prepare($query);
-            $stmt_id->bind_param("ii", $id_utente, $id_progetto);
-            $stmt_id->execute();
-            $result_id = $stmt_id->get_result();
-            if ($result_id->num_rows > 0) {
-                $row = $result_id->fetch_assoc();
-                $id_finanziamento = $row['id'];
-            
-                require_once __DIR__ . '/../mongoDB/mongodb.php';
-            
-                log_event(
-                    'FINANZIAMENTO',
-                    $_SESSION['email'],
-                    "L'utente {$_SESSION['email']} ha finanziato il progetto \"{$progetto_info['nome']}\" (ID $id_progetto) con l'importo di €$importo.",
-                    [
-                        'id_utente' => $_SESSION['id_utente'],
-                        'id_progetto' => $id_progetto,
-                        'nome_progetto' => $progetto_info['nome'],
-                        'id_finanziamento' => $id_finanziamento,
-                        'importo' => $importo
-                    ]
-                );
-                
-            
-                $stmt_id->close();
-                $conn2->close();
-            
-                header("Location: scelta_reward.php?id_finanziamento=$id_finanziamento&id_progetto=$id_progetto");
-                exit;
-            }
-             else {
-                $message = "Finanziamento registrato, ma non è stato possibile recuperare l'ID.";
-                $stmt_id->close();
-                $conn2->close();
-            }
         } else {
-            $message = "Errore durante l'inserimento del finanziamento: " . $stmt->error;
-            $stmt->close();
-            $conn1->close();
+            $stmt = $conn1->prepare("CALL InserisciFinanziamento(?, ?, ?)");
+            $stmt->bind_param("iid", $id_utente, $id_progetto, $importo);
+            if ($stmt->execute()) {
+                $stmt->close();
+                $conn1->close();
+
+                $conn2 = getConnection();
+                $query = "SELECT MAX(id_finanziamento) as id FROM finanziamento WHERE id_utente = ? AND id_progetto = ? ORDER BY data DESC LIMIT 1";
+                $stmt_id = $conn2->prepare($query);
+                $stmt_id->bind_param("ii", $id_utente, $id_progetto);
+                $stmt_id->execute();
+                $result_id = $stmt_id->get_result();
+
+                if ($result_id->num_rows > 0) {
+                    $row = $result_id->fetch_assoc();
+                    $id_finanziamento = $row['id'];
+
+                    require_once __DIR__ . '/../mongoDB/mongodb.php';
+
+                    log_event(
+                        'FINANZIAMENTO',
+                        $_SESSION['email'],
+                        "L'utente {$_SESSION['email']} ha finanziato il progetto \"{$progetto_info['nome']}\" (ID $id_progetto) con l'importo di €$importo.",
+                        [
+                            'id_utente' => $_SESSION['id_utente'],
+                            'id_progetto' => $id_progetto,
+                            'nome_progetto' => $progetto_info['nome'],
+                            'id_finanziamento' => $id_finanziamento,
+                            'importo' => $importo
+                        ]
+                    );
+
+                    $stmt_id->close();
+                    $conn2->close();
+
+                    header("Location: scelta_reward.php?id_finanziamento=$id_finanziamento&id_progetto=$id_progetto");
+                    exit;
+                } else {
+                    $message = "Finanziamento registrato, ma non è stato possibile recuperare l'ID.";
+                    $stmt_id->close();
+                    $conn2->close();
+                }
+            } else {
+                $message = "Errore durante l'inserimento del finanziamento: " . $stmt->error;
+                $stmt->close();
+                $conn1->close();
+            }
         }
     } catch (Exception $e) {
         $message = "Errore: " . $e->getMessage();
     }
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -197,6 +229,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['importo']) && $id_prog
                 </div>
             </div>
 
+            <?php if ($ha_gia_finanziato_oggi): ?>
+                <div class="alert alert-warning mt-4">
+                    Hai già finanziato questo progetto oggi. Puoi farlo di nuovo domani.
+                </div>
+            <?php else: ?>
                 <form method="post" class="mt-4">
                     <div class="mb-3">
                         <label for="importo" class="form-label">Importo da finanziare (€):</label>
@@ -207,6 +244,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['importo']) && $id_prog
                         <button type="submit" class="btn btn-danger">Finanzia</button>
                     </div>
                 </form>
+            <?php endif; ?>
             </div>
         </div>
 
