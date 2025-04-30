@@ -21,7 +21,7 @@ require_once __DIR__ . '/../mamp_xampp.php';
     <h2 class="mb-4">📨 Candidature ricevute</h2>
 
     <?php
-    $queryProgetti = "SELECT id_progetto, nome FROM progetto WHERE id_utente_creatore = $id_creatore";
+    $queryProgetti = "SELECT id_progetto, nome FROM progetto WHERE id_utente_creatore = $id_creatore AND tipo = 'software'";
     $resProgetti = $conn->query($queryProgetti);
 
     while ($progetto = $resProgetti->fetch_assoc()):
@@ -72,7 +72,7 @@ require_once __DIR__ . '/../mamp_xampp.php';
                                     
                                                 <input type="hidden" name="id_candidatura" value="<?= $cand['id_candidatura'] ?>">
                                                 <button type="submit" name="azione" value="accetta" class="btn btn-sm btn-success">✅ Accetta</button>
-                                                <button type="submit" name="azione" value="rifiuta" class="btn btn-sm btn-danger">❌ Rifiuta</button>
+                                                <button type="submit" name="azione" value="rifiuta" class="btn btn-sm btn-danger">🗑️ Rifiuta</button>
                                                 
                                             </form>
                                         <?php endif; ?>

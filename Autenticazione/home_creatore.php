@@ -112,7 +112,7 @@ $notifiche = $row['tot'];
                     <?php endif; ?>
                     <div class="card-body">
                         <h5 class="card-title">📨 Gestisci le Candidature</h5>
-                        <p class="card-text">Accetta o rifiuta una Candidatura per un tuo progetto software.</p>
+                        <p class="card-text">Accetta o rifiuta una Candidatura per un tuo Progetto Software.</p>
                     </div>
                 </div>
             </a>
@@ -135,8 +135,8 @@ $notifiche = $row['tot'];
                     <a href="../Componenti/crea_progetto.php" class="text-decoration-none text-dark">
                         <div class="card card-hover shadow-sm h-100">
                             <div class="card-body">
-                                <h5 class="card-title">🛠️ Crea nuovo Progetto</h5>
-                                <p class="card-text">Inserisci un nuovo progetto.</p>
+                                <h5 class="card-title">🛠️ Crea un nuovo Progetto</h5>
+                                <p class="card-text">Inserisci un nuovo Progetto.</p>
                             </div>
                         </div>
                     </a>

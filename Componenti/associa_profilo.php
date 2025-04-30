@@ -44,7 +44,7 @@ require_once __DIR__ . '/../mamp_xampp.php';
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <button type="button" class="btn btn-outline-danger" onclick="rimuoviCompetenza(this)">❌ Rimuovi</button>
+                    <button type="button" class="btn btn-danger" onclick="rimuoviCompetenza(this)">🗑️ Rimuovi</button>
                 </div>
             `;
             document.getElementById('competenze').appendChild(wrapper);
@@ -58,11 +58,11 @@ require_once __DIR__ . '/../mamp_xampp.php';
 </head>
 <body>
 <div class="container mt-5">
-    <h2 class="mb-4">👤 Associa un profilo a un progetto software</h2>
+    <h2 class="mb-4">👤 Associa un Profilo ad un Progetto Software</h2>
 
     <form method="POST" action="inserisci_profilo.php" class="shadow p-4 bg-white rounded">
         <div class="mb-3">
-            <label for="id_progetto" class="form-label">Progetto software:</label>
+            <label for="id_progetto" class="form-label">Progetto Software:</label>
             <select name="id_progetto" class="form-select" required>
                 <?php
                 $query = "SELECT id_progetto, nome FROM progetto WHERE id_utente_creatore = $id_utente AND tipo = 'software'";
@@ -80,7 +80,7 @@ require_once __DIR__ . '/../mamp_xampp.php';
         </div>
 
         <div class="mb-3">
-            <label for="nome_profilo" class="form-label">Nome del profilo:</label>
+            <label for="nome_profilo" class="form-label">Nome del Profilo:</label>
             <input type="text" name="nome_profilo" class="form-control" required>
         </div>
 
