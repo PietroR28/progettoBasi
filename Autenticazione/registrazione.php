@@ -1,3 +1,75 @@
+<?php
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    require_once __DIR__ . '/../mamp_xampp.php';
+    require_once __DIR__ . '/../mongoDB/mongodb.php'; // log_event()
+
+    $email = $conn->real_escape_string($_POST['email']);
+    $nickname = $conn->real_escape_string($_POST['nickname']);
+    $nome = $conn->real_escape_string($_POST['nome']);
+    $cognome = $conn->real_escape_string($_POST['cognome']);
+    $annoNascita = (int)$_POST['anno_nascita'];
+    $luogoNascita = $conn->real_escape_string($_POST['luogo_nascita']);
+    $ruolo = $conn->real_escape_string($_POST['ruolo']);
+    $codiceSicurezza = ($ruolo === 'amministratore' && isset($_POST['codice_sicurezza'])) 
+                        ? $conn->real_escape_string($_POST['codice_sicurezza']) : '';
+    $password = $_POST['password'];
+    $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+
+    // 🔒 Controllo email univoca
+    $check = $conn->prepare("SELECT COUNT(*) as cnt FROM utente WHERE email = ?");
+    $check->bind_param("s", $email);
+    $check->execute();
+    $result = $check->get_result()->fetch_assoc();
+    $check->close();
+
+    if ($result['cnt'] > 0) {
+        $error_message = "Questa email è già in uso. Inserisci un indirizzo email diverso.";
+    } else {
+        try {
+            $stmt = $conn->prepare("CALL registrazione(?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("ssssissss", 
+                $email, 
+                $nickname, 
+                $nome, 
+                $cognome, 
+                $annoNascita, 
+                $luogoNascita, 
+                $ruolo, 
+                $passwordHash,  
+                $codiceSicurezza
+            );
+
+            if ($stmt->execute()) {
+                log_event(
+                    'REGISTRAZIONE_UTENTE',
+                    $email,
+                    "L'utente '$email' ha completato la registrazione.",
+                    [
+                        'nickname' => $nickname,
+                        'nome' => $nome,
+                        'cognome' => $cognome,
+                        'anno_nascita' => $annoNascita,
+                        'luogo_nascita' => $luogoNascita,
+                        'ruolo' => $ruolo
+                    ]
+                );
+
+                $success_message = "Registrazione avvenuta con successo!";
+                echo "<script>setTimeout(() => { window.location.href = 'login.php'; }, 2000);</script>";
+            } else {
+                $error_message = "Errore durante la registrazione: " . $conn->error;
+            }
+
+            $stmt->close();
+        } catch (Exception $e) {
+            $error_message = "Si è verificato un errore: " . $e->getMessage();
+        }
+    }
+
+    $conn->close();
+}
+?>
+
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -15,6 +87,14 @@
     <div class="form-wrapper">
         <div class="form-wrapper2">
             <h1 class="text-center mb-4"><strong>REGISTRAZIONE</strong></h1>
+
+            <?php if(isset($error_message)): ?>
+                <div class="alert alert-danger text-center fw-semibold"><?= htmlspecialchars($error_message) ?></div>
+            <?php endif; ?>
+
+            <?php if(isset($success_message)): ?>
+                <div class="alert alert-success text-center fw-semibold"><?= htmlspecialchars($success_message) ?></div>
+            <?php endif; ?>
 
             <form method="post">
                 <div class="form-row">
@@ -94,13 +174,9 @@
 
             <p class="mt-3">Sei già registrato? <a href="login.php" class="text-danger">Accedi</a></p>
 
-            <?php if(isset($error_message)): ?>
-                <p class="error-message"><?= $error_message ?></p>
-            <?php endif; ?>
+            
 
-            <?php if(isset($success_message)): ?>
-                <p class="success-message"><?= $success_message ?></p>
-            <?php endif; ?>
+
         </div>
     </div>
 </div>
@@ -196,81 +272,7 @@
 </script>
 
 
-<?php
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    require_once __DIR__ . '/../mamp_xampp.php';
-    require_once __DIR__ . '/../mongoDB/mongodb.php'; // log_event()
 
-    // Ottieni e sanitizza i dati dal form
-    $email = $conn->real_escape_string($_POST['email']);
-    $nickname = $conn->real_escape_string($_POST['nickname']);
-    $nome = $conn->real_escape_string($_POST['nome']);
-    $cognome = $conn->real_escape_string($_POST['cognome']);
-    $annoNascita = (int)$_POST['anno_nascita'];
-    $luogoNascita = $conn->real_escape_string($_POST['luogo_nascita']);
-    $ruolo = $conn->real_escape_string($_POST['ruolo']);
-    
-    // Il codice di sicurezza è necessario solo per amministratori
-    $codiceSicurezza = ($ruolo === 'amministratore' && isset($_POST['codice_sicurezza'])) ? $conn->real_escape_string($_POST['codice_sicurezza']) : '';
-    
-    // Gestione password - hash della password per sicurezza
-    $password = $_POST['password'];
-    $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-    
-    try {
-        // Chiamata alla stored procedure per la registrazione
-        $stmt = $conn->prepare("CALL registrazione(?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssissss", 
-            $email, 
-            $nickname, 
-            $nome, 
-            $cognome, 
-            $annoNascita, 
-            $luogoNascita, 
-            $ruolo, 
-            $passwordHash,  
-            $codiceSicurezza
-        );
-        
-        if ($stmt->execute()) {
-            require_once __DIR__ . '/../mongoDB/mongodb.php'; 
 
-            log_event(
-                'REGISTRAZIONE_UTENTE',
-                $email,
-                "L'utente '$email',ha completato la registrazione.",
-                [
-                    'nickname' => $nickname,
-                    'nome' => $nome,
-                    'cognome' => $cognome,
-                    'anno_nascita' => $annoNascita,
-                    'luogo_nascita' => $luogoNascita,
-                    'ruolo' => $ruolo
-                ]
-            );
-
-            $success_message = "Registrazione avvenuta con successo!";
-            echo "<script>
-                alert('Registrazione avvenuta con successo!');
-                window.location.href = 'login.php';
-            </script>";
-        } else {
-            $error_message = "Errore durante la registrazione: " . $conn->error;
-            echo "<script>
-                alert('Errore durante la registrazione: " . $conn->error . "');
-            </script>";
-        }
-        
-        $stmt->close();
-    } catch (Exception $e) {
-        $error_message = "Si è verificato un errore: " . $e->getMessage();
-        echo "<script>
-            alert('Si è verificato un errore: " . $e->getMessage() . "');
-        </script>";
-    }
-    
-    $conn->close();
-}
-?>
 </body>
 </html>
