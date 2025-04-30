@@ -92,6 +92,18 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'amministratore') {
             </a>
         </div>
 
+         <!-- Le Mie Reward -->
+        <div class="col">
+            <a href="../Componenti/le_mie_reward.php" class="text-decoration-none text-dark">
+                <div class="card card-hover shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">💫 Le mie Reward</h5>
+                        <p class="card-text">Visualizza le Reward ottenute.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
         <!-- Statistiche globali -->
         <div class="col">
             <a href="../Componenti/statistiche_globali.php" class="text-decoration-none text-dark">
