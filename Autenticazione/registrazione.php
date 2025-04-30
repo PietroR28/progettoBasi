@@ -270,9 +270,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Appena si carica la pagina, imposta la descrizione giusta
     document.addEventListener("DOMContentLoaded", toggleSecurityCode);
 </script>
-
-
-
-
 </body>
 </html>
