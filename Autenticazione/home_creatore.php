@@ -132,18 +132,29 @@ $notifiche = $row['tot'];
 
         <!-- Crea progetto -->
         <div class="col">
-            <a href="../Componenti/crea_progetto.php" class="text-decoration-none text-dark">
-                <div class="card card-hover shadow-sm h-100">
-                     <div class="card-body">
-                          <h5 class="card-title">🛠️ Crea un nuovo Progetto</h5>
-                         <p class="card-text">Inserisci un nuovo Progetto.</p>
-                     </div>
-                 </div>
-             </a>
-         </div>           
-            
+                    <a href="../Componenti/crea_progetto.php" class="text-decoration-none text-dark">
+                        <div class="card card-hover shadow-sm h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">🛠️ Crea un nuovo Progetto</h5>
+                                <p class="card-text">Inserisci un nuovo Progetto.</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
 
-                <!-- Inserisci Reward -->
+        <!-- Competenza -->
+        <div class="col">
+            <a href="../Componenti/inserisci_componente.php" class="text-decoration-none text-dark">
+                <div class="card card-hover shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">➕ Aggiungi un nuovo componente</h5>
+                        <p class="card-text">Inserisci un nuovo componente nella lista dei componenti disponibili.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+                <!-- Inseriscii Reward -->
         <div class="col">
             <a href="../Componenti/inserisci_reward.php" class="text-decoration-none text-dark">
                 <div class="card card-hover shadow-sm h-100">
@@ -155,8 +166,9 @@ $notifiche = $row['tot'];
             </a>
         </div>
 
-               <!-- Le Mie Reward -->
-        <div class="col">
+
+         <!-- Le Mie Reward -->
+         <div class="col">
             <a href="../Componenti/le_mie_reward.php" class="text-decoration-none text-dark">
                 <div class="card card-hover shadow-sm h-100">
                     <div class="card-body">

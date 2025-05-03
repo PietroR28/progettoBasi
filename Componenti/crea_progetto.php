@@ -8,8 +8,8 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'creatore') {
 require_once __DIR__ . '/../mamp_xampp.php';
 
 $messaggio = '';
+$tipo_selezionato = $_POST['tipo'] ?? '';
 
-// Gestione del form
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = trim($_POST['nome']);
     $descrizione = trim($_POST['descrizione']);
@@ -19,8 +19,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_utente = $_SESSION['id_utente'];
 
     if ($nome && $descrizione && $budget > 0 && $data_limite && $tipo) {
-
-        // ✅ Controllo che il nome progetto non esista già
         $check = $conn->prepare("SELECT COUNT(*) as cnt FROM progetto WHERE nome = ?");
         $check->bind_param("s", $nome);
         $check->execute();
@@ -35,21 +33,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($stmt->execute()) {
                 $result = $conn->query("SELECT LAST_INSERT_ID() AS id_progetto");
-                $row = $result->fetch_assoc();
-                $id_progetto = $row['id_progetto'];
+                $id_progetto = $result->fetch_assoc()['id_progetto'];
                 $foto_caricate = [];
 
-                // Componenti solo se hardware
-                if ($tipo === 'hardware' && !empty($_POST['componente'])) {
-                    foreach ($_POST['componente'] as $comp) {
-                        $stmtComp = $conn->prepare("CALL Inserisci_componente(?, ?, ?, ?)");
-                        $stmtComp->bind_param("sdii", $comp['nome'], $comp['prezzo'], $comp['quantita'], $id_progetto);
-                        $stmtComp->execute();
-                        $stmtComp->close();
+                if ($tipo === 'hardware' && !empty($_POST['componenti'])) {
+                    foreach ($_POST['componenti'] as $id_comp => $info) {
+                        if (isset($info['selezionato']) && is_numeric($info['prezzo']) && is_numeric($info['quantita'])) {
+                            $stmtComp = $conn->prepare("CALL AssegnaComponente(?, ?, ?, ?)");
+                            $stmtComp->bind_param("iidi", $id_progetto, $id_comp, $info['prezzo'], $info['quantita']);
+                            $stmtComp->execute();
+                            $stmtComp->close();
+                        }
                     }
                 }
 
-                // Gestione immagini
                 if (isset($_FILES['foto']) && count($_FILES['foto']['name']) > 0) {
                     $allowed = ['jpg', 'jpeg', 'png', 'gif'];
                     $upload_dir = __DIR__ . '/../uploads/';
@@ -61,18 +58,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     foreach ($_FILES['foto']['tmp_name'] as $key => $tmp_name) {
                         if ($_FILES['foto']['error'][$key] === 0) {
                             $ext = strtolower(pathinfo($_FILES['foto']['name'][$key], PATHINFO_EXTENSION));
-
                             if (in_array($ext, $allowed)) {
                                 $new_filename = uniqid() . '.' . $ext;
                                 $destination = $upload_dir . $new_filename;
-
                                 if (move_uploaded_file($tmp_name, $destination)) {
                                     $relative_path = 'uploads/' . $new_filename;
                                     $stmtFoto = $conn->prepare("INSERT INTO foto_progetto (id_progetto, percorso) VALUES (?, ?)");
                                     $stmtFoto->bind_param("is", $id_progetto, $relative_path);
                                     $stmtFoto->execute();
                                     $stmtFoto->close();
-
                                     $foto_caricate[] = $relative_path;
                                 }
                             }
@@ -81,18 +75,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 require_once __DIR__ . '/../mongoDB/mongodb.php';
-                log_event(
-                    'PROGETTO_CREATO',
-                    $_SESSION['email'],
-                    "Il creatore '{$_SESSION['email']}' ha creato un nuovo progetto.",
-                    [
-                        'nome_progetto' => $nome,
-                        'budget' => $budget,
-                        'tipo' => $tipo,
-                        'data_limite' => $data_limite,
-                        'foto_progetto' => !empty($foto_caricate) ? $foto_caricate : ['nessuna']
-                    ]
-                );
+                log_event('PROGETTO_CREATO', $_SESSION['email'], "Creato progetto", [
+                    'nome_progetto' => $nome,
+                    'budget' => $budget,
+                    'tipo' => $tipo,
+                    'data_limite' => $data_limite,
+                ]);
 
                 $messaggio = "✅ Progetto inserito con successo!";
             } else {
@@ -106,27 +94,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <title>Inserisci Nuovo Progetto</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="../Stile/crea_progetto.css" rel="stylesheet">
 </head>
 <body>
 <div class="container mt-4">
     <h1 class="mb-4">🚀 Inserisci un nuovo progetto</h1>
 
-
-        <?php if (!empty($messaggio)): ?>
-            <div class="alert <?php echo strpos($messaggio, '✅') === 0 ? 'alert-success' : 'alert-danger'; ?> text-center fw-semibold fs-5 shadow-sm">
-                <?php echo htmlspecialchars($messaggio); ?>
-            </div>
-        <?php endif; ?>
-
-
+    <?php if (!empty($messaggio)): ?>
+        <div class="alert <?php echo strpos($messaggio, '✅') === 0 ? 'alert-success' : 'alert-danger'; ?> text-center fw-semibold fs-5 shadow-sm">
+            <?php echo htmlspecialchars($messaggio); ?>
+        </div>
+    <?php endif; ?>
 
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-danger text-white">
@@ -158,19 +141,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <label for="tipo" class="form-label">Tipo di progetto:</label>
                     <select name="tipo" id="tipo" class="form-control" required>
                         <option value="">-- Seleziona --</option>
-                        <option value="software">Software</option>
-                        <option value="hardware">Hardware</option>
+                        <option value="software" <?= $tipo_selezionato === 'software' ? 'selected' : '' ?>>Software</option>
+                        <option value="hardware" <?= $tipo_selezionato === 'hardware' ? 'selected' : '' ?>>Hardware</option>
                     </select>
                 </div>
 
-                <div id="sezione-componenti" style="display:none;">
-                    <h5>Componenti necessari</h5>
-                    <div id="componenti-container"></div>
-                    <button type="button" class="btn btn-secondary" onclick="aggiungiComponente()">➕ Aggiungi Componente</button>
+                <div id="sezione-componenti" class="mt-4" style="display: none;">
+                    <h5>Componenti disponibili</h5>
+                    <?php
+                    $res = $conn->query("SELECT id_componente, nome FROM componente ORDER BY nome ASC");
+                    if ($res && $res->num_rows > 0):
+                        while ($r = $res->fetch_assoc()):
+                            $id = $r['id_componente'];
+                            $nome = htmlspecialchars($r['nome']);
+                    ?>
+                    <div class="card mb-3 p-3">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="componenti[<?= $id ?>][selezionato]" id="comp_<?= $id ?>" value="1">
+                            <label class="form-check-label" for="comp_<?= $id ?>"><strong><?= $nome ?></strong></label>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <input type="number" class="form-control" name="componenti[<?= $id ?>][prezzo]" placeholder="Prezzo (€)" step="0.01" min="0">
+                            </div>
+                            <div class="col">
+                                <input type="number" class="form-control" name="componenti[<?= $id ?>][quantita]" placeholder="Quantità" min="1">
+                            </div>
+                        </div>
+                    </div>
+                    <?php endwhile; else: ?>
+                        <p>Nessun componente disponibile.</p>
+                    <?php endif; ?>
                 </div>
 
                 <div class="mb-3 mt-3">
-                    <label for="foto" class="form-label">Foto del progetto (selezionare più file se desiderato):</label>
+                    <label for="foto" class="form-label">Foto del progetto:</label>
                     <input type="file" name="foto[]" id="foto" class="form-control" multiple accept="image/*" required>
                 </div>
 
@@ -187,42 +192,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <script>
+// Mostra/nasconde dinamicamente al cambio
 document.getElementById('tipo').addEventListener('change', function() {
-    if (this.value === 'hardware') {
-        document.getElementById('sezione-componenti').style.display = 'block';
-    } else {
-        document.getElementById('sezione-componenti').style.display = 'none';
-    }
+    const section = document.getElementById('sezione-componenti');
+    if (section) section.style.display = (this.value === 'hardware') ? 'block' : 'none';
 });
 
-let contatoreComponenti = 0;
+// Mostra la sezione se era già selezionato "hardware"
+window.addEventListener('DOMContentLoaded', function () {
+    const tipo = document.getElementById('tipo');
+    const section = document.getElementById('sezione-componenti');
+    if (tipo && tipo.value === 'hardware' && section) {
+        section.style.display = 'block';
+    }
+});
+</script>
 
-function aggiungiComponente() {
-    const container = document.getElementById('componenti-container');
-    const div = document.createElement('div');
-    div.className = "card p-3 mb-2";
-
-    div.innerHTML = `
-    <div class="mb-2">
-        <label>Nome componente:</label>
-        <input type="text" name="componente[${contatoreComponenti}][nome]" class="form-control" required>
-    </div>
-    <div class="mb-2">
-        <label>Prezzo (€):</label>
-        <input type="number" name="componente[${contatoreComponenti}][prezzo]" class="form-control" step="0.01" required>
-    </div>
-    <div class="mb-2">
-        <label>Quantità:</label>
-        <input type="number" name="componente[${contatoreComponenti}][quantita]" class="form-control" min="1" required>
-    </div>
-    <button type="button" class="btn btn-danger" onclick="this.parentElement.remove()">🗑️ Rimuovi</button>
-    <hr>
-`;
-
-
-    container.appendChild(div);
-    contatoreComponenti++;
-}
 </script>
 </body>
 </html>

@@ -166,12 +166,12 @@ $conn->close();
             </div>
         </div>
 
-        <div class="text-center home-button-container mb-5">
-            <a href="../Autenticazione/home_utente.php" class="btn btn-success">
-                Torna alla Home
-            </a>
+        <div class="mt-4">
+            <a href="../Autenticazione/<?php 
+                echo ($_SESSION['ruolo'] === 'amministratore') ? 'home_amministratore.php' :
+                    (($_SESSION['ruolo'] === 'creatore') ? 'home_creatore.php' : 'home_utente.php');
+            ?>" class="btn btn-success">Torna alla Home</a>
         </div>
-
 </body>
 
 </html>

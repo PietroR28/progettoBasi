@@ -72,11 +72,11 @@ $conn->close();
     <?php endif; ?>
 
     <div class="mt-4">
-        <a href="finanzia.php" class="btn btn-success">Torna ai progetti da finanziare</a>
         <a href="../Autenticazione/<?php 
-        echo ($_SESSION['ruolo'] === 'amministratore') ? 'home_amministratore.php' :
-             (($_SESSION['ruolo'] === 'creatore') ? 'home_creatore.php' : 'home_utente.php');
-    ?>" class="btn btn-success">Torna alla Home</a>
+            echo ($_SESSION['ruolo'] === 'amministratore') ? 'home_amministratore.php' :
+                (($_SESSION['ruolo'] === 'creatore') ? 'home_creatore.php' : 'home_utente.php');
+        ?>" class="btn btn-success">Torna alla Home</a>    
+        <a href="finanzia.php" class="btn btn-success">Vai ai progetti da finanziare</a>    
     </div>
 </div>
 </body>
