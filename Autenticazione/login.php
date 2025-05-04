@@ -1,9 +1,4 @@
 <?php
-// Debug attivo temporaneamente
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 session_start();
 
 $error_message = null;
@@ -106,9 +101,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <form method="post" action="">
             <?php if ($is_admin && $show_security_code): ?>
-                <div class="admin-notice">
+                <div class="alert alert-danger text-center fw-semibold">
                     Accesso come <strong>amministratore</strong>. Inserisci il codice di sicurezza per completare l'accesso.
                 </div>
+
+    
 
                 <input type="hidden" name="email_utente" value="<?= htmlspecialchars($email_value); ?>">
                 <input type="hidden" name="password_utente" value="<?= isset($_POST['password_utente']) ? htmlspecialchars($_POST['password_utente']) : '' ?>">
@@ -118,7 +115,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <input type="password" id="codice_sicurezza_utente" name="codice_sicurezza_utente" class="form-control" required autofocus>
                 </div>
 
-                <button type="submit" class="btn-login">Completa Accesso</button>
+                <button type="submit" class="btn btn-success w-100">Completa Accesso</button>
             <?php else: ?>
                 <div class="mb-3">
                     <label for="email_utente" class="form-label">Email</label>
@@ -130,20 +127,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <input type="password" id="password_utente" name="password_utente" class="form-control" required>
                 </div>
 
-                <button type="submit" class="btn-login">Accedi</button>
+                <?php if (isset($error_message)): ?>
+                    <div class="alert alert-danger text-center fw-semibold mt-2"><?= $error_message ?></div>
+                <?php endif; ?>
+
+                <button type="submit" class="btn btn-success w-100">Accedi</button>
             <?php endif; ?>
         </form>
 
         <?php if (!$is_admin): ?>
             <p class="mt-3 text-center">Non hai un account? <a href="../Autenticazione/registrazione.php" class="text-danger">Registrati</a></p>
-        <?php endif; ?>
-
-        <?php if (isset($error_message)): ?>
-            <div class="message error-message text-danger text-center mt-2 fw-semibold"><?= $error_message ?></div>
-        <?php endif; ?>
-
-        <?php if (isset($success_message)): ?>
-            <div class="message success-message text-success text-center mt-2 fw-semibold"><?= $success_message ?></div>
         <?php endif; ?>
     </div>
 </body>
