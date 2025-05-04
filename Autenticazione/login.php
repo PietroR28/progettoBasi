@@ -104,9 +104,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div class="alert alert-danger text-center fw-semibold">
                     Accesso come <strong>amministratore</strong>. Inserisci il codice di sicurezza per completare l'accesso.
                 </div>
-
-    
-
+                
                 <input type="hidden" name="email_utente" value="<?= htmlspecialchars($email_value); ?>">
                 <input type="hidden" name="password_utente" value="<?= isset($_POST['password_utente']) ? htmlspecialchars($_POST['password_utente']) : '' ?>">
 
