@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['id_utente'])) {
+if (!isset($_SESSION['email_utente']) || !isset($_SESSION['ruolo_utente'])) {
     header("Location: ../Autenticazione/login.php");
     exit;
 }
@@ -39,11 +39,11 @@ if (!$id_progetto) {
 if ($id_progetto > 0) {
     // Verifica se l'utente ha già finanziato oggi questo progetto
         $ha_gia_finanziato_oggi = false;
-        if (isset($_SESSION['id_utente'])) {
+        if (isset($_SESSION['email_utente'])) {
             $oggi = date('Y-m-d');
             $conn = getConnection();
-            $stmt_check = $conn->prepare("SELECT COUNT(*) AS count FROM finanziamento WHERE id_utente = ? AND id_progetto = ? AND DATE(data) = ?");
-            $stmt_check->bind_param("iis", $_SESSION['id_utente'], $id_progetto, $oggi);
+            $stmt_check = $conn->prepare("SELECT COUNT(*) AS count FROM finanziamento WHERE email_utente = ? AND nome_progetto = ? AND DATE(data) = ?");
+            $stmt_check->bind_param("iis", $_SESSION['email_utente'], $id_progetto, $oggi);
             $stmt_check->execute();
             $res_check = $stmt_check->get_result();
             $row_check = $res_check->fetch_assoc();
@@ -53,7 +53,7 @@ if ($id_progetto > 0) {
         }
 
         $conn = getConnection();
-        $stmt = $conn->prepare("SELECT id_progetto, nome, budget, stato, data_limite, descrizione FROM progetto WHERE id_progetto = ? AND stato = 'aperto'");
+        $stmt = $conn->prepare("SELECT nome_progetto, budget_progetto, stato_progetto, data_limite_progetto, descrizione_progetto FROM progetto WHERE nome_progetto = ? AND stato_progetto = 'aperto'");
         $stmt->bind_param("i", $id_progetto);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -61,7 +61,7 @@ if ($id_progetto > 0) {
         if ($progetto_exists) {
             $progetto_info = $result->fetch_assoc();
 
-        $stmt_fin = $conn->prepare("SELECT SUM(importo) as totale FROM finanziamento WHERE id_progetto = ?");
+        $stmt_fin = $conn->prepare("SELECT SUM(importo_progetto) as totale FROM finanziamento WHERE nome_progetto = ?");
         $stmt_fin->bind_param("i", $id_progetto);
         $stmt_fin->execute();
         $res_fin = $stmt_fin->get_result();
@@ -71,7 +71,7 @@ if ($id_progetto > 0) {
         }
         $stmt_fin->close();
 
-        $budget = $progetto_info['budget'];
+        $budget = $progetto_info['budget_progetto'];
         $percentuale = ($budget > 0) ? min(100, round(($totale / $budget) * 100)) : 0;
     } else {
         $message = "Errore: Il progetto selezionato non esiste o non è aperto per finanziamenti.";
@@ -80,16 +80,16 @@ if ($id_progetto > 0) {
     $conn->close();
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['importo']) && $id_progetto > 0) {
-    $importo = floatval(str_replace(',', '.', $_POST['importo']));
-    $id_utente = $_SESSION['id_utente'];
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['importo_progetto']) && $id_progetto > 0) {
+    $importo = floatval(str_replace(',', '.', $_POST['importo_progetto']));
+    $id_utente = $_SESSION['email_utente'];
 
     try {
         $conn1 = getConnection();
 
         // Controllo: un solo finanziamento al giorno per ciascun progetto per utente
         $oggi = date('Y-m-d');
-        $stmt_check = $conn1->prepare("SELECT COUNT(*) AS count FROM finanziamento WHERE id_utente = ? AND id_progetto = ? AND DATE(data) = ?");
+        $stmt_check = $conn1->prepare("SELECT COUNT(*) AS count FROM finanziamento WHERE email_utente = ? AND nome_progetto = ? AND DATE(data) = ?");
         $stmt_check->bind_param("iis", $id_utente, $id_progetto, $oggi);
         $stmt_check->execute();
         $res_check = $stmt_check->get_result();
@@ -107,7 +107,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['importo']) && $id_prog
                 $conn1->close();
 
                 $conn2 = getConnection();
-                $query = "SELECT MAX(id_finanziamento) as id FROM finanziamento WHERE id_utente = ? AND id_progetto = ? ORDER BY data DESC LIMIT 1";
+                $query = "SELECT MAX(id_finanziamento) as id FROM finanziamento WHERE email_utente = ? AND nome_progetto = ? ORDER BY data DESC LIMIT 1";
                 $stmt_id = $conn2->prepare($query);
                 $stmt_id->bind_param("ii", $id_utente, $id_progetto);
                 $stmt_id->execute();
@@ -122,20 +122,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['importo']) && $id_prog
                     log_event(
                         'FINANZIAMENTO',
                         $_SESSION['email'],
-                        "L'utente {$_SESSION['email']} ha finanziato il progetto \"{$progetto_info['nome']}\" (ID $id_progetto) con l'importo di €$importo.",
+                        "L'utente {$_SESSION['email']} ha finanziato il progetto \"{$progetto_info['nome_progetto']}\" con l'importo di €$importo.",
                         [
-                            'id_utente' => $_SESSION['id_utente'],
-                            'id_progetto' => $id_progetto,
-                            'nome_progetto' => $progetto_info['nome'],
+                            'email_utente' => $_SESSION['email_utente'],
+                            'nome_progetto' => $progetto_info['nome_progetto'],
                             'id_finanziamento' => $id_finanziamento,
-                            'importo' => $importo
+                            'importo_finanziamento' => $importo
                         ]
                     );
 
                     $stmt_id->close();
                     $conn2->close();
 
-                    header("Location: scelta_reward.php?id_finanziamento=$id_finanziamento&id_progetto=$id_progetto");
+                    header("Location: scelta_reward.php?id_finanziamento=$id_finanziamento&nome_progetto=$nome_progetto");
                     exit;
                 } else {
                     $message = "Finanziamento registrato, ma non è stato possibile recuperare l'ID.";
@@ -184,11 +183,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['importo']) && $id_prog
                 <tbody>
                     <?php foreach ($progetti_disponibili as $progetto): ?>
                         <tr>
-                            <td><?php echo $progetto['id_progetto']; ?></td>
-                            <td><?php echo htmlspecialchars($progetto['nome']); ?></td>
-                            <td><?php echo htmlspecialchars(substr($progetto['descrizione'], 0, 100)) . (strlen($progetto['descrizione']) > 100 ? '...' : ''); ?></td>
-                            <td><?php echo date('d/m/Y', strtotime($progetto['data_inserimento'])); ?></td>
-                            <td><a href="finanzia.php?id=<?php echo $progetto['id_progetto']; ?>" class="btn btn-danger btn-sm">Seleziona</a></td>
+                            
+                            <td><?php echo htmlspecialchars($progetto['nome_progetto']); ?></td>
+                            <td><?php echo htmlspecialchars(substr($progetto['descrizione_progetto'], 0, 100)) . (strlen($progetto['descrizione_progetto']) > 100 ? '...' : ''); ?></td>
+                            <td><?php echo date('d/m/Y', strtotime($progetto['data_inserimento_progetto'])); ?></td>
+                            <td><a href="finanzia.php?id=<?php echo $progetto['nome_progetto']; ?>" class="btn btn-danger btn-sm">Seleziona</a></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -198,12 +197,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['importo']) && $id_prog
     <?php elseif ($progetto_exists): ?>
         <div class="card mb-4">
             <div class="card-body">
-                <h3><?php echo htmlspecialchars($progetto_info['nome']); ?></h3>
-                <p><strong>Descrizione:</strong> <?php echo nl2br(htmlspecialchars($progetto_info['descrizione'])); ?></p>
+                <h3><?php echo htmlspecialchars($progetto_info['nome_progetto']); ?></h3>
+                <p><strong>Descrizione:</strong> <?php echo nl2br(htmlspecialchars($progetto_info['descrizione_progetto'])); ?></p>
                 <p>
-                    <strong>Budget richiesto:</strong> €<?php echo number_format($progetto_info['budget'], 2, ',', '.'); ?> |
-                    <strong>Stato:</strong> <?php echo htmlspecialchars($progetto_info['stato']); ?> |
-                    <strong>Data limite:</strong> <?php echo date('d/m/Y', strtotime($progetto_info['data_limite'])); ?>
+                    <strong>Budget richiesto:</strong> €<?php echo number_format($progetto_info['budget_progetto'], 2, ',', '.'); ?> |
+                    <strong>Stato:</strong> <?php echo htmlspecialchars($progetto_info['stato_progetto']); ?> |
+                    <strong>Data limite:</strong> <?php echo date('d/m/Y', strtotime($progetto_info['data_limite_progetto'])); ?>
                 </p>
                 <p>
                     <strong>Finanziato:</strong> €<?php echo number_format($totale, 2, ',', '.'); ?> (<?php echo $percentuale; ?>%)
@@ -237,7 +236,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['importo']) && $id_prog
                 <form method="post" class="mt-4">
                     <div class="mb-3">
                         <label for="importo" class="form-label">Importo da finanziare (€):</label>
-                        <input type="number" class="form-control" id="importo" name="importo" step="0.01" min="1" required>
+                        <input type="number" class="form-control" id="importo_progetto" name="importo_progetto" step="0.01" min="1" required>
                     </div>
                     <div class="d-flex">
                         <a href="finanzia.php" class="btn btn-secondary me-2">Torna alla lista</a>
@@ -255,8 +254,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['importo']) && $id_prog
 
     <div class="mt-4">
         <a href="../Autenticazione/<?php 
-            echo ($_SESSION['ruolo'] === 'amministratore') ? 'home_amministratore.php' :
-                 (($_SESSION['ruolo'] === 'creatore') ? 'home_creatore.php' : 'home_utente.php');
+            echo ($_SESSION['ruolo_utente'] === 'amministratore') ? 'home_amministratore.php' :
+                 (($_SESSION['ruolo_utente'] === 'creatore') ? 'home_creatore.php' : 'home_utente.php');
         ?>" class="btn btn-success">Torna alla Home</a>
     </div>
 </body>
