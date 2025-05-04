@@ -2,7 +2,7 @@
 session_start();
 
 // Sicurezza: verifica che l'utente sia loggato e sia un utente semplice
-if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'creatore') {
+if (!isset($_SESSION['email_utente']) || $_SESSION['ruolo_utente'] !== 'creatore') {
     header("Location: ../Autenticazione/login.php");
     exit();
 }
@@ -10,22 +10,24 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'creatore') {
 require_once __DIR__ . '/../mamp_xampp.php'; // o regola il percorso
 
 
-$id_creatore = $_SESSION['id_utente'];
+$id_creatore = $_SESSION['email_utente'];
 
 // Query per contare le candidature in attesa
 $query = "
     SELECT COUNT(*) AS tot
     FROM candidatura c
-    JOIN profilo p ON c.id_profilo = p.id_profilo
-    JOIN progetto pr ON p.id_progetto = pr.id_progetto
-    WHERE pr.id_utente_creatore = $id_creatore
-      AND c.accettazione = 'in attesa'
+    JOIN profilo p ON c.nome_profilo = p.nome_profilo
+    JOIN progetto pr ON p.nome_progetto = pr.nome_progetto
+    WHERE pr.email_utente_creatore = ?
+      AND c.accettazione_candidatura = 'in attesa'
 ";
-
-$res = $conn->query($query);
+$stmt = $conn->prepare($query);
+$stmt->bind_param("s", $id_creatore);
+$stmt->execute();
+$res = $stmt->get_result();
 $row = $res->fetch_assoc();
 $notifiche = $row['tot'];
-
+$stmt->close();
 
 ?>
 
@@ -47,7 +49,7 @@ $notifiche = $row['tot'];
 </head>
 <body>
 <div class="container mt-5">
-    <h2 class="mb-4">Benvenuto, <?php echo htmlspecialchars($_SESSION['nickname']); ?>!</h2>
+    <h2 class="mb-4">Benvenuto, <?php echo htmlspecialchars($_SESSION['nickname_utente']); ?>!</h2>
     <p>Da qui puoi gestire tutte le funzionalità disponibili per te.</p>
     <hr>
 

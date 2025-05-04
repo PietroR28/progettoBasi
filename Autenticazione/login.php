@@ -1,18 +1,19 @@
 <?php
-// Inizializza la sessione
+// Debug attivo temporaneamente
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 session_start();
 
-// Messaggi di errore e successo
 $error_message = null;
 $success_message = null;
 
-// Verifica se l'utente è già loggato, in tal caso reindirizza
-if (isset($_SESSION['id_utente'])) {
-    // Reindirizza in base al ruolo dell'utente
-    if ($_SESSION['ruolo'] === 'amministratore') {
+if (isset($_SESSION['email_utente'])) {
+    if ($_SESSION['ruolo_utente'] === 'amministratore') {
         header("Location: home_amministratore.php");
         exit;
-    } elseif ($_SESSION['ruolo'] === 'creatore') {
+    } elseif ($_SESSION['ruolo_utente'] === 'creatore') {
         header("Location: home_creatore.php");
         exit;
     } else {
@@ -21,66 +22,53 @@ if (isset($_SESSION['id_utente'])) {
     }
 }
 
-// Flag per mostrare il campo codice di sicurezza
 $show_security_code = false;
-// Memorizza i valori inviati in precedenza
 $email_value = '';
 $is_admin = false;
 
-// Gestione del form di login
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    require_once __DIR__ . '/../mamp_xampp.php'; // Connessione centralizzata
+    require_once __DIR__ . '/../mamp_xampp.php';
 
-    // Ottieni e sanitizza i dati dal form
-    $email = $conn->real_escape_string($_POST['email']);
-    $email_value = $email; // Memorizza per il form
-    $password = $_POST['password'];
-    
+    $email = $conn->real_escape_string($_POST['email_utente']);
+    $email_value = $email;
+    $password = $_POST['password_utente'];
+
     try {
-        // Chiamata alla stored procedure per l'autenticazione
         $stmt = $conn->prepare("CALL autenticazione(?)");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
-        
+
         if ($result->num_rows > 0) {
-            // Utente trovato
             $user = $result->fetch_assoc();
-            
-            // Verifica la password
-            if (password_verify($password, $user['password'])) {
-                // Per gli amministratori, verifica anche il codice di sicurezza
-                if ($user['ruolo'] === 'amministratore') {
-                    $is_admin = true; // Segna l'utente come admin
-                    
-                    if (!isset($_POST['codice_sicurezza']) || empty($_POST['codice_sicurezza'])) {
+
+            if (password_verify($password, $user['password_utente'])) {
+                if ($user['ruolo_utente'] === 'amministratore') {
+                    $is_admin = true;
+
+                    if (!isset($_POST['codice_sicurezza_utente']) || empty($_POST['codice_sicurezza_utente'])) {
                         $error_message = "Per completare l'accesso come amministratore, inserisci il codice di sicurezza.";
                         $show_security_code = true;
-                    } 
-                    elseif ($_POST['codice_sicurezza'] !== $user['codice_sicurezza']) {
+                    } elseif ($_POST['codice_sicurezza_utente'] !== $user['codice_sicurezza_utente']) {
                         $error_message = "Codice di sicurezza non valido. Riprova.";
                         $show_security_code = true;
-                    } 
-                    else {
-                        $_SESSION['id_utente'] = $user['id_utente'];
-                        $_SESSION['email'] = $user['email'];
-                        $_SESSION['nickname'] = $user['nickname'];
-                        $_SESSION['nome'] = $user['nome'];
-                        $_SESSION['cognome'] = $user['cognome'];
-                        $_SESSION['ruolo'] = $user['ruolo'];
-                        
+                    } else {
+                        $_SESSION['email_utente'] = $user['email_utente'];
+                        $_SESSION['nickname_utente'] = $user['nickname_utente'];
+                        $_SESSION['nome_utente'] = $user['nome_utente'];
+                        $_SESSION['cognome_utente'] = $user['cognome_utente'];
+                        $_SESSION['ruolo_utente'] = $user['ruolo_utente'];
                         header("Location: home_amministratore.php");
                         exit;
                     }
                 } else {
-                    $_SESSION['id_utente'] = $user['id_utente'];
-                    $_SESSION['email'] = $user['email'];
-                    $_SESSION['nickname'] = $user['nickname'];
-                    $_SESSION['nome'] = $user['nome'];
-                    $_SESSION['cognome'] = $user['cognome'];
-                    $_SESSION['ruolo'] = $user['ruolo'];
-                    
-                    if ($user['ruolo'] === 'creatore') {
+                    $_SESSION['email_utente'] = $user['email_utente'];
+                    $_SESSION['nickname_utente'] = $user['nickname_utente'];
+                    $_SESSION['nome_utente'] = $user['nome_utente'];
+                    $_SESSION['cognome_utente'] = $user['cognome_utente'];
+                    $_SESSION['ruolo_utente'] = $user['ruolo_utente'];
+
+                    if ($user['ruolo_utente'] === 'creatore') {
                         header("Location: home_creatore.php");
                         exit;
                     } else {
@@ -94,12 +82,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else {
             $error_message = "Nessun account trovato con questa email.";
         }
-        
+
         $stmt->close();
     } catch (Exception $e) {
         $error_message = "Si è verificato un errore: " . $e->getMessage();
     }
-    
+
     $conn->close();
 }
 ?>
@@ -112,35 +100,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="../Stile/login.css" rel="stylesheet">
 </head>
-
 <body class="d-flex align-items-center justify-content-center min-vh-100 bg-light">
     <div class="login-container">
-        <h1 class="login-title"> <strong> ACCESSO </strong></h1>
+        <h1 class="login-title"><strong>ACCESSO</strong></h1>
 
-        <form method="post">
+        <form method="post" action="">
             <?php if ($is_admin && $show_security_code): ?>
                 <div class="admin-notice">
                     Accesso come <strong>amministratore</strong>. Inserisci il codice di sicurezza per completare l'accesso.
                 </div>
 
-                <input type="hidden" name="email" value="<?= htmlspecialchars($email_value); ?>">
-                <input type="hidden" name="password" value="<?= htmlspecialchars($_POST['password']); ?>">
+                <input type="hidden" name="email_utente" value="<?= htmlspecialchars($email_value); ?>">
+                <input type="hidden" name="password_utente" value="<?= isset($_POST['password_utente']) ? htmlspecialchars($_POST['password_utente']) : '' ?>">
 
                 <div class="mb-3">
-                    <label for="codice_sicurezza" class="form-label">Codice di sicurezza</label>
-                    <input type="password" id="codice_sicurezza" name="codice_sicurezza" class="form-control" required autofocus>
+                    <label for="codice_sicurezza_utente" class="form-label">Codice di sicurezza</label>
+                    <input type="password" id="codice_sicurezza_utente" name="codice_sicurezza_utente" class="form-control" required autofocus>
                 </div>
 
                 <button type="submit" class="btn-login">Completa Accesso</button>
             <?php else: ?>
                 <div class="mb-3">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" id="email" name="email" value="<?= htmlspecialchars($email_value); ?>" class="form-control" required>
+                    <label for="email_utente" class="form-label">Email</label>
+                    <input type="email" id="email_utente" name="email_utente" value="<?= htmlspecialchars($email_value); ?>" class="form-control" required>
                 </div>
 
                 <div class="mb-3">
-                    <label for="password" class="form-label">Password</label>
-                    <input type="password" id="password" name="password" class="form-control" required>
+                    <label for="password_utente" class="form-label">Password</label>
+                    <input type="password" id="password_utente" name="password_utente" class="form-control" required>
                 </div>
 
                 <button type="submit" class="btn-login">Accedi</button>
@@ -152,11 +139,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php endif; ?>
 
         <?php if (isset($error_message)): ?>
-            <div class="message error-message"><?= $error_message ?></div>
+            <div class="message error-message text-danger text-center mt-2 fw-semibold"><?= $error_message ?></div>
         <?php endif; ?>
 
         <?php if (isset($success_message)): ?>
-            <div class="message success-message"><?= $success_message ?></div>
+            <div class="message success-message text-success text-center mt-2 fw-semibold"><?= $success_message ?></div>
         <?php endif; ?>
     </div>
 </body>

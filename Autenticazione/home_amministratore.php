@@ -2,7 +2,7 @@
 session_start();
 
 // Sicurezza: verifica che l'utente sia loggato e sia un utente semplice
-if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'amministratore') {
+if (!isset($_SESSION['email_utente']) || $_SESSION['ruolo_utente'] !== 'amministratore') {
     header("Location: ../Autenticazione/login.php");
     exit();
 }
@@ -26,7 +26,7 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'amministratore') {
 </head>
 <body>
 <div class="container mt-5">
-    <h2 class="mb-4">Benvenuto, <?php echo htmlspecialchars($_SESSION['nickname']); ?>!</h2>
+    <h2 class="mb-4">Benvenuto, <?php echo htmlspecialchars($_SESSION['nickname_utente']); ?>!</h2>
     <p>Da qui puoi gestire tutte le funzionalità disponibili per te.</p>
     <hr>
 
