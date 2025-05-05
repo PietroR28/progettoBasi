@@ -6,18 +6,18 @@ error_reporting(E_ALL);
 session_start();
 
 // Verifica sessione
-if (!isset($_SESSION['id_utente'])) {
+if (!isset($_SESSION['email_utente'])) {
     die("Accesso negato: utente non loggato.");
 }
 
-$id_utente = $_SESSION['id_utente'];
+$email_utente = $_SESSION['email_utente'];
 
 // Verifica parametro POST
-if (!isset($_POST['id_profilo'])) {
-    die("Errore: ID profilo non ricevuto.");
+if (!isset($_POST['nome_profilo'])) {
+    die("Errore: nome profilo non ricevuto.");
 }
 
-$id_profilo = intval($_POST['id_profilo']);
+$nome_profilo = $_POST['nome_profilo'];
 
 require_once __DIR__ . '/../mamp_xampp.php';
 
@@ -31,18 +31,18 @@ if (!$stmt) {
     $errore = "Errore nella preparazione della query: " . $conn->error;
     $esito = false;
 } else {
-    $stmt->bind_param("ii", $id_utente, $id_profilo);
+    $stmt->bind_param("ss", $email_utente, $nome_profilo);
 
     if ($stmt->execute()) {
         // Recupera info del profilo e progetto associato
         $queryInfo = "
-            SELECT p.nome AS nome_profilo, pr.id_progetto, pr.nome AS nome_progetto
+            SELECT p.nome_profilo, pr.nome_progetto
             FROM profilo p
-            JOIN progetto pr ON p.id_progetto = pr.id_progetto
-            WHERE p.id_profilo = ?
+            JOIN progetto pr ON p.nome_progetto = pr.nome_progetto
+            WHERE p.nome_profilo = ?
         ";
         $infoStmt = $conn->prepare($queryInfo);
-        $infoStmt->bind_param("i", $id_profilo);
+        $infoStmt->bind_param("s", $nome_profilo);
         $infoStmt->execute();
         $info = $infoStmt->get_result()->fetch_assoc();
         $infoStmt->close();
@@ -53,13 +53,11 @@ if (!$stmt) {
 
             log_event(
                 'CANDIDATURA_INVIATA',
-                $_SESSION['email'],
-                "L'utente {$_SESSION['email']} ha inviato una candidatura per il profilo \"{$info['nome_profilo']}\" nel progetto \"{$info['nome_progetto']}\".",
+                $_SESSION['email_utente'],
+                "L'utente {$_SESSION['email_utente']} ha inviato una candidatura per il profilo \"{$info['nome_profilo']}\" nel progetto \"{$info['nome_progetto']}\".",
                 [
-                    'id_utente' => $id_utente,
-                    'id_profilo' => $id_profilo,
-                    'nome_profilo' => $info['nome_profilo'],
-                    'id_progetto' => $info['id_progetto'],
+                    'email_utente' => $email_utente,
+                    'nome_profilo' => $nome_profilo,
                     'nome_progetto' => $info['nome_progetto']
                 ]
             );

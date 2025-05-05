@@ -17,13 +17,13 @@ if (($statoFiltro !== 'tutti' && !empty($statoFiltro)) || ($tipoFiltro !== 'tutt
     $types = '';
 
     if (!empty($statoFiltro) && $statoFiltro !== 'tutti') {
-        $query .= " AND stato = ?";
+        $query .= " AND stato_progetto = ?";
         $params[] = $statoFiltro;
         $types .= 's';
     }
 
     if (!empty($tipoFiltro) && $tipoFiltro !== 'tutti') {
-        $query .= " AND tipo = ?";
+        $query .= " AND tipo_progetto = ?";
         $params[] = $tipoFiltro;
         $types .= 's';
     }
@@ -37,8 +37,8 @@ if (($statoFiltro !== 'tutti' && !empty($statoFiltro)) || ($tipoFiltro !== 'tutt
     $result = $stmt->get_result();
     while ($row = $result->fetch_assoc()) {
         // Carica la prima foto associata
-        $stmtFoto = $conn->prepare("SELECT percorso FROM foto_progetto WHERE id_progetto = ? LIMIT 1");
-        $stmtFoto->bind_param('i', $row['id_progetto']);
+        $stmtFoto = $conn->prepare("SELECT percorso FROM foto_progetto WHERE nome_progetto = ? LIMIT 1");
+        $stmtFoto->bind_param('s', $row['nome_progetto']);
         $stmtFoto->execute();
         $resFoto = $stmtFoto->get_result();
         if ($foto = $resFoto->fetch_assoc()) {
@@ -55,8 +55,8 @@ if (($statoFiltro !== 'tutti' && !empty($statoFiltro)) || ($tipoFiltro !== 'tutt
     $result = $conn->query("SELECT * FROM progetto");
     while ($row = $result->fetch_assoc()) {
         // Carica la prima foto associata
-        $stmtFoto = $conn->prepare("SELECT percorso FROM foto_progetto WHERE id_progetto = ? LIMIT 1");
-        $stmtFoto->bind_param('i', $row['id_progetto']);
+        $stmtFoto = $conn->prepare("SELECT percorso FROM foto_progetto WHERE nome_progetto = ? LIMIT 1");
+        $stmtFoto->bind_param('s', $row['nome_progetto']);
         $stmtFoto->execute();
         $resFoto = $stmtFoto->get_result();
         if ($foto = $resFoto->fetch_assoc()) {
@@ -71,15 +71,15 @@ if (($statoFiltro !== 'tutti' && !empty($statoFiltro)) || ($tipoFiltro !== 'tutt
 }
 
 // Inserimento commenti (solo commenti principali)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['commento'], $_GET['id_progetto'])) {
-    $id_progetto = (int)$_GET['id_progetto'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['commento'], $_GET['nome_progetto'])) {
+    $nome_progetto = $_GET['nome_progetto'];
     $commento = trim($_POST['commento']);
 
-    if (isset($_SESSION['id_utente']) && !empty($_SESSION['id_utente'])) {
-        $id_utente = (int)$_SESSION['id_utente'];
+    if (isset($_SESSION['email']) && !empty($_SESSION['email'])) {
+        $email_utente = $_SESSION['email'];
 
-        $stmt = $conn->prepare("INSERT INTO commento (testo, id_progetto, id_utente, data, id_commento_padre) VALUES (?, ?, ?, NOW(), NULL)");
-        $stmt->bind_param('sii', $commento, $id_progetto, $id_utente);
+        $stmt = $conn->prepare("INSERT INTO commento (testo_commento, nome_progetto, email, data_commento, id_commento_padre) VALUES (?, ?, ?, NOW(), NULL)");
+        $stmt->bind_param('sss', $commento, $nome_progetto, $email_utente);
 
         if ($stmt->execute()) {
             $id_commento = $stmt->insert_id;
@@ -88,10 +88,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['commento'], $_GET['id
             log_event(
                 'COMMENTO_INSERITO',
                 $_SESSION['email'],
-                "L'utente '{$_SESSION['email']}' ha inserito un commento al progetto ID $id_progetto.",
+                "L'utente '{$_SESSION['email']}' ha inserito un commento al progetto $nome_progetto.",
                 [
-                    'id_progetto' => $id_progetto,
-                    'id_utente' => $_SESSION['id_utente'],
+                    'nome_progetto' => $nome_progetto,
+                    'email_utente' => $_SESSION['email'],
                     'id_commento' => $id_commento,
                     'testo_commento' => $commento
                 ]
@@ -112,23 +112,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['commento'], $_GET['id
 foreach ($progetti as $index => $progetto) {
     $commenti = [];
 
-    $stmt = $conn->prepare("SELECT c.id_commento, c.testo, c.data, u.nickname 
+    $stmt = $conn->prepare("SELECT c.id_commento, c.testo_commento as testo, c.data_commento as data, u.nickname_utente as nickname 
                             FROM commento c 
-                            JOIN utente u ON c.id_utente = u.id_utente 
-                            WHERE c.id_progetto = ? AND c.id_commento_padre IS NULL 
-                            ORDER BY c.data DESC");
-    $stmt->bind_param('i', $progetto['id_progetto']);
+                            JOIN utente u ON c.email = u.email_utente 
+                            WHERE c.nome_progetto = ? AND c.id_commento_padre IS NULL 
+                            ORDER BY c.data_commento DESC");
+    $stmt->bind_param('s', $progetto['nome_progetto']);
     $stmt->execute();
     $result = $stmt->get_result();
 
     while ($row = $result->fetch_assoc()) {
         $row['risposte'] = [];
 
-        $substmt = $conn->prepare("SELECT c.testo, c.data, u.nickname 
+        $substmt = $conn->prepare("SELECT c.testo_commento as testo, c.data_commento as data, u.nickname_utente as nickname 
                                    FROM commento c 
-                                   JOIN utente u ON c.id_utente = u.id_utente 
+                                   JOIN utente u ON c.email = u.email_utente 
                                    WHERE c.id_commento_padre = ? 
-                                   ORDER BY c.data ASC");
+                                   ORDER BY c.data_commento ASC");
         $substmt->bind_param("i", $row['id_commento']);
         $substmt->execute();
         $subres = $substmt->get_result();
@@ -194,12 +194,12 @@ $conn->close();
                     <div class="card shadow-sm p-4 mb-4">
                         <div class="row g-3 align-items-center">
                             <div class="col-md-9">
-                                <h4><?= htmlspecialchars($progetto['nome']) ?></h4>
-                                <p><strong>Tipo:</strong> <?= htmlspecialchars($progetto['tipo']) ?></p>
-                                <p><strong>Stato:</strong> <?= htmlspecialchars($progetto['stato']) ?></p>
-                                <p><strong>Descrizione:</strong> <?= htmlspecialchars($progetto['descrizione']) ?></p>
-                                <p><strong>Budget:</strong> €<?= htmlspecialchars($progetto['budget']) ?></p>
-                                <p><strong>Data limite:</strong> <?= htmlspecialchars($progetto['data_limite']) ?></p>
+                                <h4><?= htmlspecialchars($progetto['nome_progetto']) ?></h4>
+                                <p><strong>Tipo:</strong> <?= htmlspecialchars($progetto['tipo_progetto']) ?></p>
+                                <p><strong>Stato:</strong> <?= htmlspecialchars($progetto['stato_progetto']) ?></p>
+                                <p><strong>Descrizione:</strong> <?= htmlspecialchars($progetto['descrizione_progetto']) ?></p>
+                                <p><strong>Budget:</strong> €<?= htmlspecialchars($progetto['budget_progetto']) ?></p>
+                                <p><strong>Data inserimento:</strong> <?= htmlspecialchars($progetto['data_inserimento_progetto']) ?></p>
 
                                 <hr>
 
@@ -228,7 +228,7 @@ $conn->close();
                                     </ul>
                                 <?php endif; ?>
 
-                                <form method="POST" action="visualizza_progetto.php?id_progetto=<?= $progetto['id_progetto'] ?>&stato=<?= urlencode($statoFiltro) ?>&tipo=<?= urlencode($tipoFiltro) ?>">
+                                <form method="POST" action="visualizza_progetto.php?nome_progetto=<?= urlencode($progetto['nome_progetto']) ?>&stato=<?= urlencode($statoFiltro) ?>&tipo=<?= urlencode($tipoFiltro) ?>">
                                     <div class="mb-3">
                                         <textarea name="commento" class="form-control" required placeholder="Scrivi il tuo commento..."></textarea>
                                     </div>
