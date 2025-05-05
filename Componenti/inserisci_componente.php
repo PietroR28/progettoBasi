@@ -6,34 +6,41 @@ $messaggio = "";
 
 // Inserimento nuovo componente
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nome = trim($_POST['nome']);
-    
-    if (!empty($nome)) {
-        $stmt = $conn->prepare("CALL InserisciComponente(?)");
-        $stmt->bind_param("s", $nome);
+    $nome_componente = trim($_POST['nome_componente']);
 
-        if ($stmt->execute()) {
-            $result = $stmt->get_result();
-            $row = $result ? $result->fetch_assoc() : null;
-            $id_componente = $row['id_componente'] ?? null;
+    if (!empty($nome_componente)) {
+        $stmt = $conn->prepare("CALL InserisciComponente(?)");
+        $stmt->bind_param("s", $nome_componente);
+
+        try {
+            if ($stmt->execute()) {
+                $result = $stmt->get_result();
+                $row = $result ? $result->fetch_assoc() : null;
+                $id_componente = $row['id_componente'] ?? null;
         
-            while ($stmt->more_results() && $stmt->next_result()) {;}
-            $stmt->close();
+                while ($stmt->more_results() && $stmt->next_result()) {;}
+                $stmt->close();
         
-            // Log evento
-            require_once __DIR__ . '/../mongoDB/mongodb.php';
-            log_event(
-                'COMPONENTE_INSERITO',
-                $_SESSION['email'] ?? 'utente_non_autenticato',
-                "È stato inserito un nuovo componente: \"$nome\".",
-                [
-                    'id_componente' => $id_componente,
-                    'nome_componente' => $nome,
-                    'inserito_da' => $_SESSION['email'] ?? 'non_autenticato'
-                ]
-            );
+                require_once __DIR__ . '/../mongoDB/mongodb.php';
+                log_event(
+                    'COMPONENTE_INSERITO',
+                    $_SESSION['email_utente'] ?? 'utente_non_autenticato',
+                    "È stato inserito un nuovo componente: \"$nome_componente\".",
+                    [
+                        'id_componente' => $id_componente,
+                        'nome_componente' => $nome_componente,
+                        'inserito_da' => $_SESSION['email_utente'] ?? 'non_autenticato'
+                    ]
+                );
         
-            $messaggio = "✅ Componente inserito con successo!";
+                $messaggio = "✅ Componente inserito con successo!";
+            }
+        } catch (mysqli_sql_exception $e) {
+            if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
+                $messaggio = "⚠️ Esiste già un componente con questo nome.";
+            } else {
+                $messaggio = "❌ Errore imprevisto: " . $e->getMessage();
+            }
         }
         
     } else {
@@ -43,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Recupero componenti esistenti
 $componenti = [];
-$result = $conn->query("SELECT nome FROM componente ORDER BY nome ASC");
+$result = $conn->query("SELECT nome_componente FROM componente ORDER BY nome_componente ASC");
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $componenti[] = $row;
@@ -63,14 +70,14 @@ if ($result && $result->num_rows > 0) {
         <h2 class="mb-4">Inserisci un nuovo componente</h2>
         <form method="post">
             <div class="mb-3">
-                <label for="nome" class="form-label">Nome componente</label>
-                <input type="text" name="nome" id="nome" class="form-control" required>
+                <label for="nome_componente" class="form-label">Nome componente</label>
+                <input type="text" name="nome_componente" id="nome_componente" class="form-control" required>
             </div>
             <button type="submit" class="btn btn-danger">Inserisci</button>
         </form>
 
         <?php if (!empty($messaggio)): ?>
-            <div class="alert alert-info mt-3"><?= $messaggio ?></div>
+            <div class="alert alert-info mt-3 text-center fw-semibold"><?= $messaggio ?></div>
         <?php endif; ?>
     </div>
 
@@ -86,7 +93,7 @@ if ($result && $result->num_rows > 0) {
                 <tbody>
                     <?php foreach ($componenti as $c): ?>
                         <tr>
-                            <td><?= htmlspecialchars($c['nome']) ?></td>
+                            <td><?= htmlspecialchars($c['nome_componente']) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -95,11 +102,10 @@ if ($result && $result->num_rows > 0) {
     <?php endif; ?>
 
     <div class="text-center mt-4">
-    <a href="../Autenticazione/home_creatore.php" class="btn btn-success">
-         Torna alla Home
+        <a href="../Autenticazione/home_creatore.php" class="btn btn-success">
+            Torna alla Home
         </a>
     </div>
-</div>
 </div>
 </body>
 </html>

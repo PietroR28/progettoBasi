@@ -1,25 +1,25 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'creatore') {
+if (!isset($_SESSION['email_utente']) || $_SESSION['ruolo_utente'] !== 'creatore') {
     die("Accesso non autorizzato.");
 }
 
 require_once __DIR__ . '/../mamp_xampp.php';
 
 $messaggio = '';
-$tipo_selezionato = $_POST['tipo'] ?? '';
+$tipo_selezionato = $_POST['tipo_progetto'] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nome = trim($_POST['nome']);
-    $descrizione = trim($_POST['descrizione']);
-    $budget = (float)$_POST['budget'];
-    $data_limite = $_POST['data_limite'];
-    $tipo = $_POST['tipo'];
-    $id_utente = $_SESSION['id_utente'];
+    $nome = trim($_POST['nome_progetto']);
+    $descrizione = trim($_POST['descrizione_progetto']);
+    $budget = (float)$_POST['budget_progetto'];
+    $data_limite = $_POST['data_limite_progetto'];
+    $tipo = $_POST['tipo_progetto'];
+    $email_utente = $_SESSION['email_utente'];
 
     if ($nome && $descrizione && $budget > 0 && $data_limite && $tipo) {
-        $check = $conn->prepare("SELECT COUNT(*) as cnt FROM progetto WHERE nome = ?");
+        $check = $conn->prepare("SELECT COUNT(*) as cnt FROM progetto WHERE nome_progetto = ?");
         $check->bind_param("s", $nome);
         $check->execute();
         $check_result = $check->get_result()->fetch_assoc();
@@ -28,19 +28,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($check_result['cnt'] > 0) {
             $messaggio = "⚠️ Esiste già un progetto con questo nome. Scegline un altro.";
         } else {
-            $stmt = $conn->prepare("CALL Crea_progetto(?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("ssdssi", $nome, $descrizione, $budget, $data_limite, $tipo, $id_utente);
+            $stmt = $conn->prepare("CALL CreaProgetto(?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("ssdsss", $nome, $descrizione, $budget, $data_limite, $tipo, $email_utente);
 
             if ($stmt->execute()) {
-                $result = $conn->query("SELECT LAST_INSERT_ID() AS id_progetto");
-                $id_progetto = $result->fetch_assoc()['id_progetto'];
+                $stmt->close();
                 $foto_caricate = [];
 
                 if ($tipo === 'hardware' && !empty($_POST['componenti'])) {
                     foreach ($_POST['componenti'] as $id_comp => $info) {
-                        if (isset($info['selezionato']) && is_numeric($info['prezzo']) && is_numeric($info['quantita'])) {
+                        if (isset($info['selezionato']) && is_numeric($info['prezzo_componente']) && is_numeric($info['quantita_componente'])) {
                             $stmtComp = $conn->prepare("CALL AssegnaComponente(?, ?, ?, ?)");
-                            $stmtComp->bind_param("iidi", $id_progetto, $id_comp, $info['prezzo'], $info['quantita']);
+                            $stmtComp->bind_param("sidi", $nome, $id_comp, $info['prezzo_componente'], $info['quantita_componente']);
                             $stmtComp->execute();
                             $stmtComp->close();
                         }
@@ -63,8 +62,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 $destination = $upload_dir . $new_filename;
                                 if (move_uploaded_file($tmp_name, $destination)) {
                                     $relative_path = 'uploads/' . $new_filename;
-                                    $stmtFoto = $conn->prepare("INSERT INTO foto_progetto (id_progetto, percorso) VALUES (?, ?)");
-                                    $stmtFoto->bind_param("is", $id_progetto, $relative_path);
+                                    $stmtFoto = $conn->prepare("INSERT INTO foto_progetto (nome_progetto, percorso) VALUES (?, ?)");
+                                    $stmtFoto->bind_param("ss", $nome, $relative_path);
                                     $stmtFoto->execute();
                                     $stmtFoto->close();
                                     $foto_caricate[] = $relative_path;
@@ -75,25 +74,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 require_once __DIR__ . '/../mongoDB/mongodb.php';
-                log_event('PROGETTO_CREATO', $_SESSION['email'], "Creato progetto", [
+                log_event('PROGETTO_CREATO', $_SESSION['email_utente'], "Creato progetto", [
                     'nome_progetto' => $nome,
-                    'budget' => $budget,
-                    'tipo' => $tipo,
-                    'data_limite' => $data_limite,
+                    'budget_progetto' => $budget,
+                    'tipo_progetto' => $tipo,
+                    'data_limite_progetto' => $data_limite,
                 ]);
 
                 $messaggio = "✅ Progetto inserito con successo!";
             } else {
                 $messaggio = "❌ Errore durante l'inserimento: " . $stmt->error;
             }
-            $stmt->close();
         }
     } else {
         $messaggio = "⚠️ Compila tutti i campi correttamente.";
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -119,27 +116,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <form method="POST" action="" enctype="multipart/form-data">
                 <div class="mb-3">
                     <label for="nome" class="form-label">Nome progetto:</label>
-                    <input type="text" name="nome" id="nome" class="form-control" required>
+                    <input type="text" name="nome_progetto" id="nome_progetto" class="form-control" required>
                 </div>
 
                 <div class="mb-3">
                     <label for="descrizione" class="form-label">Descrizione:</label>
-                    <textarea name="descrizione" id="descrizione" class="form-control" rows="5" required></textarea>
+                    <textarea name="descrizione_progetto" id="descrizione_progetto" class="form-control" rows="5" required></textarea>
                 </div>
 
                 <div class="mb-3">
                     <label for="budget" class="form-label">Budget (€):</label>
-                    <input type="number" name="budget" id="budget" step="0.01" class="form-control" required>
+                    <input type="number" name="budget_progetto" id="budget_progetto" step="0.01" class="form-control" required>
                 </div>
 
                 <div class="mb-3">
                     <label for="data_limite" class="form-label">Data limite:</label>
-                    <input type="date" name="data_limite" id="data_limite" class="form-control" required>
+                    <input type="date" name="data_limite_progetto" id="data_limite_progetto" class="form-control" required>
                 </div>
 
                 <div class="mb-3">
                     <label for="tipo" class="form-label">Tipo di progetto:</label>
-                    <select name="tipo" id="tipo" class="form-control" required>
+                    <select name="tipo_progetto" id="tipo_progetto" class="form-control" required>
                         <option value="">-- Seleziona --</option>
                         <option value="software" <?= $tipo_selezionato === 'software' ? 'selected' : '' ?>>Software</option>
                         <option value="hardware" <?= $tipo_selezionato === 'hardware' ? 'selected' : '' ?>>Hardware</option>
@@ -149,23 +146,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div id="sezione-componenti" class="mt-4" style="display: none;">
                     <h5>Componenti disponibili</h5>
                     <?php
-                    $res = $conn->query("SELECT id_componente, nome FROM componente ORDER BY nome ASC");
+                    $res = $conn->query("SELECT id_componente, nome_componente FROM componente ORDER BY nome_componente ASC");
                     if ($res && $res->num_rows > 0):
                         while ($r = $res->fetch_assoc()):
                             $id = $r['id_componente'];
-                            $nome = htmlspecialchars($r['nome']);
+                            $nome_comp = htmlspecialchars($r['nome_componente']);
                     ?>
                     <div class="card mb-3 p-3">
                         <div class="form-check mb-2">
                             <input class="form-check-input" type="checkbox" name="componenti[<?= $id ?>][selezionato]" id="comp_<?= $id ?>" value="1">
-                            <label class="form-check-label" for="comp_<?= $id ?>"><strong><?= $nome ?></strong></label>
+                            <label class="form-check-label" for="comp_<?= $id ?>"><strong><?= $nome_comp ?></strong></label>
                         </div>
                         <div class="row">
                             <div class="col">
-                                <input type="number" class="form-control" name="componenti[<?= $id ?>][prezzo]" placeholder="Prezzo (€)" step="0.01" min="0">
+                                <input type="number" class="form-control" name="componenti[<?= $id ?>][prezzo_componente]" placeholder="Prezzo (€)" step="0.01" min="0">
                             </div>
                             <div class="col">
-                                <input type="number" class="form-control" name="componenti[<?= $id ?>][quantita]" placeholder="Quantità" min="1">
+                                <input type="number" class="form-control" name="componenti[<?= $id ?>][quantita_componente]" placeholder="Quantità" min="1">
                             </div>
                         </div>
                     </div>
@@ -192,22 +189,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <script>
-// Mostra/nasconde dinamicamente al cambio
-document.getElementById('tipo').addEventListener('change', function() {
+document.getElementById('tipo_progetto').addEventListener('change', function() {
     const section = document.getElementById('sezione-componenti');
     if (section) section.style.display = (this.value === 'hardware') ? 'block' : 'none';
 });
 
-// Mostra la sezione se era già selezionato "hardware"
 window.addEventListener('DOMContentLoaded', function () {
-    const tipo = document.getElementById('tipo');
+    const tipo = document.getElementById('tipo_progetto');
     const section = document.getElementById('sezione-componenti');
     if (tipo && tipo.value === 'hardware' && section) {
         section.style.display = 'block';
     }
 });
-</script>
-
 </script>
 </body>
 </html>
