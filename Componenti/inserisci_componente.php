@@ -7,50 +7,45 @@ $messaggio = "";
 // Inserimento nuovo componente
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome_componente = trim($_POST['nome_componente']);
+    $descrizione_componente = trim($_POST['descrizione_componente']);
 
-    if (!empty($nome_componente)) {
-        $stmt = $conn->prepare("CALL InserisciComponente(?)");
-        $stmt->bind_param("s", $nome_componente);
+    if (!empty($nome_componente) && !empty($descrizione_componente)) {
+        $stmt = $conn->prepare("CALL InserisciComponente(?, ?)");
+        $stmt->bind_param("ss", $nome_componente, $descrizione_componente);
 
         try {
             if ($stmt->execute()) {
-                $result = $stmt->get_result();
-                $row = $result ? $result->fetch_assoc() : null;
-                $id_componente = $row['id_componente'] ?? null;
-        
                 while ($stmt->more_results() && $stmt->next_result()) {;}
                 $stmt->close();
-        
+
                 require_once __DIR__ . '/../mongoDB/mongodb.php';
                 log_event(
                     'COMPONENTE_INSERITO',
                     $_SESSION['email_utente'] ?? 'utente_non_autenticato',
                     "È stato inserito un nuovo componente: \"$nome_componente\".",
                     [
-                        'id_componente' => $id_componente,
                         'nome_componente' => $nome_componente,
                         'inserito_da' => $_SESSION['email_utente'] ?? 'non_autenticato'
                     ]
                 );
-        
+
                 $messaggio = "✅ Componente inserito con successo!";
             }
         } catch (mysqli_sql_exception $e) {
-            if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
+            if (strpos($e->getMessage(), 'Duplicate entry') !== false || strpos($e->getMessage(), 'Componente già esistente') !== false) {
                 $messaggio = "⚠️ Esiste già un componente con questo nome.";
             } else {
                 $messaggio = "❌ Errore imprevisto: " . $e->getMessage();
             }
         }
-        
     } else {
-        $messaggio = "⚠️ Il nome del componente non può essere vuoto.";
+        $messaggio = "⚠️ Compila tutti i campi correttamente.";
     }
 }
 
 // Recupero componenti esistenti
 $componenti = [];
-$result = $conn->query("SELECT nome_componente FROM componente ORDER BY nome_componente ASC");
+$result = $conn->query("SELECT nome_componente, descrizione_componente FROM componente ORDER BY nome_componente ASC");
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $componenti[] = $row;
@@ -73,6 +68,10 @@ if ($result && $result->num_rows > 0) {
                 <label for="nome_componente" class="form-label">Nome componente</label>
                 <input type="text" name="nome_componente" id="nome_componente" class="form-control" required>
             </div>
+            <div class="mb-3">
+                <label for="descrizione_componente" class="form-label">Descrizione</label>
+                <textarea name="descrizione_componente" id="descrizione_componente" class="form-control" required></textarea>
+            </div>
             <button type="submit" class="btn btn-danger">Inserisci</button>
         </form>
 
@@ -88,12 +87,14 @@ if ($result && $result->num_rows > 0) {
                 <thead>
                     <tr>
                         <th>Nome</th>
+                        <th>Descrizione</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($componenti as $c): ?>
                         <tr>
                             <td><?= htmlspecialchars($c['nome_componente']) ?></td>
+                            <td><?= htmlspecialchars($c['descrizione_componente']) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

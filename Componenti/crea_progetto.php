@@ -36,10 +36,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $foto_caricate = [];
 
                 if ($tipo === 'hardware' && !empty($_POST['componenti'])) {
-                    foreach ($_POST['componenti'] as $id_comp => $info) {
+                    foreach ($_POST['componenti'] as $nome_comp => $info) {
                         if (isset($info['selezionato']) && is_numeric($info['prezzo_componente']) && is_numeric($info['quantita_componente'])) {
                             $stmtComp = $conn->prepare("CALL AssegnaComponente(?, ?, ?, ?)");
-                            $stmtComp->bind_param("sidi", $nome, $id_comp, $info['prezzo_componente'], $info['quantita_componente']);
+                            $stmtComp->bind_param("ssdi", $nome, $nome_comp, $info['prezzo_componente'], $info['quantita_componente']);
                             $stmtComp->execute();
                             $stmtComp->close();
                         }
@@ -146,23 +146,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div id="sezione-componenti" class="mt-4" style="display: none;">
                     <h5>Componenti disponibili</h5>
                     <?php
-                    $res = $conn->query("SELECT id_componente, nome_componente FROM componente ORDER BY nome_componente ASC");
+                    $res = $conn->query("SELECT nome_componente FROM componente ORDER BY nome_componente ASC");
                     if ($res && $res->num_rows > 0):
                         while ($r = $res->fetch_assoc()):
-                            $id = $r['id_componente'];
                             $nome_comp = htmlspecialchars($r['nome_componente']);
                     ?>
                     <div class="card mb-3 p-3">
                         <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" name="componenti[<?= $id ?>][selezionato]" id="comp_<?= $id ?>" value="1">
-                            <label class="form-check-label" for="comp_<?= $id ?>"><strong><?= $nome_comp ?></strong></label>
+                            <input class="form-check-input" type="checkbox" name="componenti[<?= $nome_comp ?>][selezionato]" id="comp_<?= $nome_comp ?>" value="1">
+                            <label class="form-check-label" for="comp_<?= $nome_comp ?>"><strong><?= $nome_comp ?></strong></label>
                         </div>
                         <div class="row">
                             <div class="col">
-                                <input type="number" class="form-control" name="componenti[<?= $id ?>][prezzo_componente]" placeholder="Prezzo (€)" step="0.01" min="0">
+                                <input type="number" class="form-control" name="componenti[<?= $nome_comp ?>][prezzo_componente]" placeholder="Prezzo (€)" step="0.01" min="0">
                             </div>
                             <div class="col">
-                                <input type="number" class="form-control" name="componenti[<?= $id ?>][quantita_componente]" placeholder="Quantità" min="1">
+                                <input type="number" class="form-control" name="componenti[<?= $nome_comp ?>][quantita_componente]" placeholder="Quantità" min="1">
                             </div>
                         </div>
                     </div>
