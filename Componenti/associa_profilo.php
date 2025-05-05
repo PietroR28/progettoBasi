@@ -1,9 +1,9 @@
 <?php
 session_start();
-if (!isset($_SESSION['id_utente'])) {
+if (!isset($_SESSION['email_utente'])) {
     die("Errore: utente non loggato.");
 }
-$id_utente = $_SESSION['id_utente'];
+$id_utente = $_SESSION['email_utente'];
 
 require_once __DIR__ . '/../mamp_xampp.php';
 ?>

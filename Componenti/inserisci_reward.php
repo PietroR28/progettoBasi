@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'creatore') {
+if (!isset($_SESSION['email_utente']) || $_SESSION['ruolo_utente'] !== 'creatore') {
     header("Location: ../Autenticazione/login.php");
     exit;
 }
@@ -9,19 +9,19 @@ if (!isset($_SESSION['id_utente']) || $_SESSION['ruolo'] !== 'creatore') {
 require_once __DIR__ . '/../mamp_xampp.php';
 
 $messaggio = "";
-$id_utente = $_SESSION['id_utente'];
+$email_utente = $_SESSION['email_utente'];
 
 // Recupera i progetti del creatore
-$stmt = $conn->prepare("SELECT id_progetto, nome FROM progetto WHERE id_utente_creatore = ?");
-$stmt->bind_param("i", $id_utente);
+$stmt = $conn->prepare("SELECT nome_progetto FROM progetto WHERE email_utente_creatore = ?");
+$stmt->bind_param("s", $email_utente);
 $stmt->execute();
 $progetti = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
 // Gestione inserimento reward
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['descrizione'], $_POST['id_progetto'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['descrizione'], $_POST['nome_progetto'])) {
     $descrizione = trim($_POST['descrizione']);
-    $id_progetto = intval($_POST['id_progetto']);
+    $nome_progetto = $_POST['nome_progetto'];
     $foto_path = "";
 
     // Gestione immagine
@@ -49,33 +49,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['descrizione'], $_POST
     if (empty($messaggio)) {
         // Inserisci la reward
         $stmt = $conn->prepare("CALL InserisciReward(?, ?, ?)");
-        $stmt->bind_param("ssi", $descrizione, $foto_path, $id_progetto);
+        $stmt->bind_param("sss", $descrizione, $foto_path, $nome_progetto);
         $stmt->execute();
 
         $result = $stmt->get_result();
         $row = $result->fetch_assoc();
-        while ($stmt->more_results() && $stmt->next_result()) {;} // Fix sync
+        while ($stmt->more_results() && $stmt->next_result()) {;}
         $stmt->close();
 
         if ($row['id_reward'] > 0) {
-           
             try {
                 require_once __DIR__ . '/../mongoDB/mongodb.php';
 
-                $q = $conn->prepare("SELECT nome FROM progetto WHERE id_progetto = ?");
-                $q->bind_param("i", $id_progetto);
-                $q->execute();
-                $q->bind_result($nome_progetto);
-                $q->fetch();
-                $q->close();
-
                 log_event(
                     'REWARD_INSERITA',
-                    $_SESSION['email'],
-                    "Il creatore {$_SESSION['email']} ha inserito una reward nel progetto \"$nome_progetto\".",
+                    $_SESSION['email_utente'],
+                    "Il creatore {$_SESSION['email_utente']} ha inserito una reward nel progetto \"$nome_progetto\".",
                     [
-                        'id_utente' => $id_utente,
-                        'id_progetto' => $id_progetto,
+                        'email_utente' => $email_utente,
                         'nome_progetto' => $nome_progetto,
                         'id_reward' => $row['id_reward'],
                         'descrizione_reward' => $descrizione,
@@ -124,12 +115,12 @@ $conn->close();
             <?php else: ?>
                 <form method="POST" enctype="multipart/form-data">
                     <div class="mb-3">
-                        <label for="id_progetto" class="form-label">Progetto:</label>
-                        <select name="id_progetto" id="id_progetto" class="form-control" required>
+                        <label for="nome_progetto" class="form-label">Progetto:</label>
+                        <select name="nome_progetto" id="nome_progetto" class="form-control" required>
                             <option value="">-- Seleziona --</option>
                             <?php foreach ($progetti as $progetto): ?>
-                                <option value="<?= $progetto['id_progetto'] ?>">
-                                    <?= htmlspecialchars($progetto['nome']) ?>
+                                <option value="<?= $progetto['nome_progetto'] ?>">
+                                    <?= htmlspecialchars($progetto['nome_progetto']) ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>

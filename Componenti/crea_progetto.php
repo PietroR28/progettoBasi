@@ -175,7 +175,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="file" name="foto[]" id="foto" class="form-control" multiple accept="image/*" required>
                 </div>
 
-                <button type="submit" class="btn btn-success">Crea Progetto</button>
+                <button type="submit" class="btn btn-danger">Crea Progetto</button>
             </form>
         </div>
     </div>
