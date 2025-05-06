@@ -36,16 +36,11 @@ if (($statoFiltro !== 'tutti' && !empty($statoFiltro)) || ($tipoFiltro !== 'tutt
     $stmt->execute();
     $result = $stmt->get_result();
     while ($row = $result->fetch_assoc()) {
-        // Carica la prima foto associata
         $stmtFoto = $conn->prepare("SELECT percorso FROM foto_progetto WHERE nome_progetto = ? LIMIT 1");
         $stmtFoto->bind_param('s', $row['nome_progetto']);
         $stmtFoto->execute();
         $resFoto = $stmtFoto->get_result();
-        if ($foto = $resFoto->fetch_assoc()) {
-            $row['foto'] = $foto['percorso'];
-        } else {
-            $row['foto'] = null;
-        }
+        $row['foto'] = ($foto = $resFoto->fetch_assoc()) ? $foto['percorso'] : null;
         $stmtFoto->close();
 
         $progetti[] = $row;
@@ -54,87 +49,72 @@ if (($statoFiltro !== 'tutti' && !empty($statoFiltro)) || ($tipoFiltro !== 'tutt
 } elseif ($statoFiltro === 'tutti' && $tipoFiltro === 'tutti') {
     $result = $conn->query("SELECT * FROM progetto");
     while ($row = $result->fetch_assoc()) {
-        // Carica la prima foto associata
         $stmtFoto = $conn->prepare("SELECT percorso FROM foto_progetto WHERE nome_progetto = ? LIMIT 1");
         $stmtFoto->bind_param('s', $row['nome_progetto']);
         $stmtFoto->execute();
         $resFoto = $stmtFoto->get_result();
-        if ($foto = $resFoto->fetch_assoc()) {
-            $row['foto'] = $foto['percorso'];
-        } else {
-            $row['foto'] = null;
-        }
+        $row['foto'] = ($foto = $resFoto->fetch_assoc()) ? $foto['percorso'] : null;
         $stmtFoto->close();
 
         $progetti[] = $row;
     }
 }
 
-// Inserimento commenti (solo commenti principali)
+// Inserimento commenti tramite stored procedure
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['commento'], $_GET['nome_progetto'])) {
     $nome_progetto = $_GET['nome_progetto'];
     $commento = trim($_POST['commento']);
 
-    if (isset($_SESSION['email']) && !empty($_SESSION['email'])) {
-        $email_utente = $_SESSION['email'];
+    if (isset($_SESSION['email_utente']) && !empty($_SESSION['email_utente'])) {
+        $email_utente = $_SESSION['email_utente'];
 
-        $stmt = $conn->prepare("INSERT INTO commento (testo_commento, nome_progetto, email, data_commento, id_commento_padre) VALUES (?, ?, ?, NOW(), NULL)");
+        $stmt = $conn->prepare("CALL InserisciCommento(?, ?, ?)");
         $stmt->bind_param('sss', $commento, $nome_progetto, $email_utente);
 
         if ($stmt->execute()) {
-            $id_commento = $stmt->insert_id;
             require_once __DIR__ . '/../mongoDB/mongodb.php';
+            log_event('COMMENTO_INSERITO', $email_utente, "L'utente '$email_utente' ha inserito un commento al progetto $nome_progetto.", [
+                'nome_progetto' => $nome_progetto,
+                'email_utente' => $email_utente,
+                'testo_commento' => $commento
+            ]);
 
-            log_event(
-                'COMMENTO_INSERITO',
-                $_SESSION['email'],
-                "L'utente '{$_SESSION['email']}' ha inserito un commento al progetto $nome_progetto.",
-                [
-                    'nome_progetto' => $nome_progetto,
-                    'email_utente' => $_SESSION['email'],
-                    'id_commento' => $id_commento,
-                    'testo_commento' => $commento
-                ]
-            );
-            
             header("Location: visualizza_progetto.php?stato=" . urlencode($statoFiltro) . "&tipo=" . urlencode($tipoFiltro));
             exit;
         } else {
-            die("Errore SQL durante inserimento commento: " . $stmt->error);
+            die("Errore durante l'inserimento del commento tramite stored procedure: " . $stmt->error);
         }
+
         $stmt->close();
     } else {
         die("Non hai effettuato l'accesso.");
     }
 }
 
-// Recupera commenti e risposte per ogni progetto
+
+// Recupera commenti e risposte
 foreach ($progetti as $index => $progetto) {
     $commenti = [];
-
-    $stmt = $conn->prepare("SELECT c.id_commento, c.testo_commento as testo, c.data_commento as data, u.nickname_utente as nickname 
+    $stmt = $conn->prepare("SELECT c.id_commento, c.testo_commento AS testo, c.data_commento AS data, u.nickname_utente AS nickname 
                             FROM commento c 
-                            JOIN utente u ON c.email = u.email_utente 
-                            WHERE c.nome_progetto = ? AND c.id_commento_padre IS NULL 
+                            JOIN utente u ON c.email_utente = u.email_utente 
+                            WHERE c.nome_progetto = ? 
                             ORDER BY c.data_commento DESC");
     $stmt->bind_param('s', $progetto['nome_progetto']);
     $stmt->execute();
     $result = $stmt->get_result();
 
     while ($row = $result->fetch_assoc()) {
-        $row['risposte'] = [];
-
-        $substmt = $conn->prepare("SELECT c.testo_commento as testo, c.data_commento as data, u.nickname_utente as nickname 
-                                   FROM commento c 
-                                   JOIN utente u ON c.email = u.email_utente 
-                                   WHERE c.id_commento_padre = ? 
-                                   ORDER BY c.data_commento ASC");
+        // Recupera risposta (se esiste)
+        $substmt = $conn->prepare("SELECT r.testo_risposta AS testo, r.data_risposta AS data, u.nickname_utente AS nickname 
+                                   FROM risposta_commento r
+                                   JOIN utente u ON r.email_creatore_commento = u.email_utente
+                                   WHERE r.id_commento = ?");
         $substmt->bind_param("i", $row['id_commento']);
         $substmt->execute();
         $subres = $substmt->get_result();
-
-        while ($r = $subres->fetch_assoc()) {
-            $row['risposte'][] = $r;
+        if ($r = $subres->fetch_assoc()) {
+            $row['risposta_creatore'] = $r;
         }
         $substmt->close();
 
@@ -147,6 +127,7 @@ foreach ($progetti as $index => $progetto) {
 
 $conn->close();
 ?>
+
 
 <!DOCTYPE html>
 <html lang="it">
