@@ -1,11 +1,13 @@
 <?php
 session_start();
-if (!isset($_SESSION['id_utente'])) {
-    die("Accesso negato.");
+
+if (!isset($_SESSION['email_utente']) || $_SESSION['ruolo_utente'] !== 'creatore') {
+    header("Location: ../Autenticazione/login.php");
+    exit;
 }
-$id_creatore = $_SESSION['id_utente'];
 
 require_once __DIR__ . '/../mamp_xampp.php';
+$email_utente = $_SESSION['email_utente'];
 ?>
 
 <!DOCTYPE html>
@@ -21,34 +23,43 @@ require_once __DIR__ . '/../mamp_xampp.php';
     <h2 class="mb-4">📨 Candidature ricevute</h2>
 
     <?php
-    $queryProgetti = "SELECT id_progetto, nome FROM progetto WHERE id_utente_creatore = $id_creatore AND tipo = 'software'";
-    $resProgetti = $conn->query($queryProgetti);
+    // 1. Progetti
+    $stmtProgetti = $conn->prepare("SELECT nome_progetto FROM progetto WHERE email_utente_creatore = ? AND tipo_progetto = 'software'");
+    $stmtProgetti->bind_param("s", $email_utente);
+    $stmtProgetti->execute();
+    $resProgetti = $stmtProgetti->get_result();
 
     while ($progetto = $resProgetti->fetch_assoc()):
-        $id_progetto = $progetto['id_progetto'];
+        $nome_progetto = $progetto['nome_progetto'];
     ?>
         <div class="card mb-4 shadow-sm">
             <div class="card-body">
-                <h4 class="card-title">📁 Progetto: <?= htmlspecialchars($progetto['nome']) ?></h4>
+                <h4 class="card-title">📁 Progetto: <?= htmlspecialchars($nome_progetto) ?></h4>
 
                 <?php
-                $queryProfili = "SELECT id_profilo, nome FROM profilo WHERE id_progetto = $id_progetto";
-                $resProfili = $conn->query($queryProfili);
+                // 2. Profili
+                $stmtProfili = $conn->prepare("SELECT nome_profilo FROM profilo WHERE nome_progetto = ?");
+                $stmtProfili->bind_param("s", $nome_progetto);
+                $stmtProfili->execute();
+                $resProfili = $stmtProfili->get_result();
 
                 while ($profilo = $resProfili->fetch_assoc()):
-                    $id_profilo = $profilo['id_profilo'];
+                    $nome_profilo = $profilo['nome_profilo'];
                 ?>
                     <div class="mt-4">
-                        <h5>👤 Profilo: <?= htmlspecialchars($profilo['nome']) ?></h5>
+                        <h5>👤 Profilo: <?= htmlspecialchars($nome_profilo) ?></h5>
 
                         <?php
-                        $queryCandidature = "
-                            SELECT c.id_candidatura, c.id_utente, u.nome, c.accettazione
+                        // 3. Candidature
+                        $stmtCandidature = $conn->prepare("
+                            SELECT c.data_candidatura, c.email_utente, u.nome_utente, c.accettazione_candidatura
                             FROM candidatura c
-                            JOIN utente u ON c.id_utente = u.id_utente
-                            WHERE c.id_profilo = $id_profilo
-                        ";
-                        $resCandidature = $conn->query($queryCandidature);
+                            JOIN utente u ON c.email_utente = u.email_utente
+                            WHERE c.nome_profilo = ?
+                        ");
+                        $stmtCandidature->bind_param("s", $nome_profilo);
+                        $stmtCandidature->execute();
+                        $resCandidature = $stmtCandidature->get_result();
 
                         if ($resCandidature->num_rows === 0): ?>
                             <p class="text-muted">Nessuna candidatura ricevuta.</p>
@@ -56,26 +67,26 @@ require_once __DIR__ . '/../mamp_xampp.php';
                             <ul class="list-group">
                                 <?php while ($cand = $resCandidature->fetch_assoc()): ?>
                                     <li class="list-group-item">
-                                        🧑 <strong><?= htmlspecialchars($cand['nome']) ?></strong> – Stato:
+                                        🧑 <strong><?= htmlspecialchars($cand['nome_utente']) ?></strong> – Stato:
                                         <?php
-                                        if ($cand['accettazione'] === 'accettata') {
+                                        if ($cand['accettazione_candidatura'] === 'accettata') {
                                             echo "<span class='badge bg-success'>Accettata</span>";
-                                        } elseif ($cand['accettazione'] === 'rifiutata') {
+                                        } elseif ($cand['accettazione_candidatura'] === 'rifiutata') {
                                             echo "<span class='badge bg-danger'>Rifiutata</span>";
                                         } else {
                                             echo "<span class='badge bg-warning text-dark'>In attesa</span>";
                                         }
                                         ?>
 
-                                        <?php if ($cand['accettazione'] === 'in attesa'): ?>
-                                            <form method="POST" action="gestione_candidatura_azione.php" class="d-inline ms-3">
-                                    
-                                                <input type="hidden" name="id_candidatura" value="<?= $cand['id_candidatura'] ?>">
-                                                <button type="submit" name="azione" value="accetta" class="btn btn-sm btn-success">✅ Accetta</button>
-                                                <button type="submit" name="azione" value="rifiuta" class="btn btn-sm btn-danger">🗑️ Rifiuta</button>
-                                                
-                                            </form>
-                                        <?php endif; ?>
+                                        <?php if ($cand['accettazione_candidatura'] === 'in attesa'): ?>
+    <form method="POST" action="gestione_candidatura_azione.php" class="d-inline ms-3">
+        <input type="hidden" name="data_candidatura" value="<?= $cand['data_candidatura'] ?>">
+        <input type="hidden" name="nome_profilo" value="<?= $nome_profilo ?>">
+        <button type="submit" name="azione" value="accetta" class="btn btn-sm btn-success">✅ Accetta</button>
+        <button type="submit" name="azione" value="rifiuta" class="btn btn-sm btn-danger">🗑️ Rifiuta</button>
+    </form>
+<?php endif; ?>
+
                                     </li>
                                 <?php endwhile; ?>
                             </ul>
@@ -89,7 +100,7 @@ require_once __DIR__ . '/../mamp_xampp.php';
 
     <div class="text-center mt-5 home-button-container">
         <a href="../Autenticazione/home_creatore.php" class="btn btn-success">
-             Torna alla Home
+            Torna alla Home
         </a>
     </div>
 </div>

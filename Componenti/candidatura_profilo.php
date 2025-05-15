@@ -58,16 +58,16 @@ require_once __DIR__ . '/../mamp_xampp.php';
                         echo "<h5 class='mt-3'>👤 Profilo: " . htmlspecialchars($profilo['nome_profilo']) . "</h5>";
 
                         $querySkill = "
-                            SELECT c.nome_competenza, ps.livello_profilo
+                            SELECT c.nome_skill, ps.livello_profilo
                             FROM profilo p
-                            JOIN profilo ps ON p.nome_profilo = ps.nome_profilo AND p.nome_competenza = ps.nome_competenza
-                            JOIN competenza c ON ps.nome_competenza = c.nome_competenza
+                            JOIN profilo ps ON p.nome_profilo = ps.nome_profilo AND p.nome_skill = ps.nome_skill
+                            JOIN skill c ON ps.nome_skill = c.nome_skill
                             WHERE p.nome_profilo = '$nome_profilo'";
                         $resSkill = $conn->query($querySkill);
 
                         echo "<p>Competenze richieste:</p><ul>";
                         while ($s = $resSkill->fetch_assoc()) {
-                            echo "<li>" . htmlspecialchars($s['nome_competenza']) . " (livello " . $s['livello_profilo'] . ")</li>";
+                            echo "<li>" . htmlspecialchars($s['nome_skill']) . " (livello " . $s['livello_profilo'] . ")</li>";
                         }
                         echo "</ul>";
 
@@ -77,10 +77,10 @@ require_once __DIR__ . '/../mamp_xampp.php';
                         $queryOk = "
                             SELECT COUNT(*) AS tot_ok
                             FROM profilo ps
-                            JOIN utente_competenze uc ON ps.nome_competenza = uc.nome_competenza
+                            JOIN utente_skill uc ON ps.nome_skill = uc.nome_skill
                             WHERE ps.nome_profilo = '$nome_profilo'
-                              AND uc.email = '$email_utente'
-                              AND uc.livello_utente_competenze >= ps.livello_profilo";
+                              AND uc.email_utente = '$email_utente'
+                              AND uc.livello_utente_skill >= ps.livello_profilo";
                         $ok = $conn->query($queryOk)->fetch_assoc()['tot_ok'];
 
                         $queryCheck = "SELECT accettazione_candidatura FROM candidatura WHERE email_utente = '$email_utente' AND nome_profilo = '$nome_profilo'";
