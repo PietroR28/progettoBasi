@@ -79,13 +79,13 @@ $email_utente = $_SESSION['email_utente'];
                                         ?>
 
                                         <?php if ($cand['accettazione_candidatura'] === 'in attesa'): ?>
-    <form method="POST" action="gestione_candidatura_azione.php" class="d-inline ms-3">
-        <input type="hidden" name="data_candidatura" value="<?= $cand['data_candidatura'] ?>">
-        <input type="hidden" name="nome_profilo" value="<?= $nome_profilo ?>">
-        <button type="submit" name="azione" value="accetta" class="btn btn-sm btn-success">✅ Accetta</button>
-        <button type="submit" name="azione" value="rifiuta" class="btn btn-sm btn-danger">🗑️ Rifiuta</button>
-    </form>
-<?php endif; ?>
+                                            <form method="POST" action="gestione_candidatura_azione.php" class="d-inline ms-3">
+                                                <input type="hidden" name="data_candidatura" value="<?= $cand['data_candidatura'] ?>">
+                                                <input type="hidden" name="nome_profilo" value="<?= $nome_profilo ?>">
+                                                <button type="submit" name="azione" value="accetta" class="btn btn-sm btn-success">✅ Accetta</button>
+                                                <button type="submit" name="azione" value="rifiuta" class="btn btn-sm btn-danger">🗑️ Rifiuta</button>
+                                            </form>
+                                        <?php endif; ?>
 
                                     </li>
                                 <?php endwhile; ?>
