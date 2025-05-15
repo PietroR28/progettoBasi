@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['id_utente'])) {
+if (!isset($_SESSION['email_utente'])) {
     header("Location: ../Autenticazione/login.php");
     exit;
 }
@@ -94,31 +94,31 @@ $conn->close();
                             <tbody>
                                 <?php foreach ($progetti_top as $progetto): ?>
                                     <tr>
-                                        <td><?= htmlspecialchars($progetto['nome']) ?></td>
-                                        <td>€<?= number_format($progetto['budget'], 2, ',', '.') ?></td>
+                                        <td><?= htmlspecialchars($progetto['nome_progetto']) ?></td>
+                                        <td>€<?= number_format($progetto['budget_progetto'], 2, ',', '.') ?></td>
                                         <td>€<?= number_format($progetto['totale_finanziamenti'], 2, ',', '.') ?></td>
                                         <td>€<?= number_format($progetto['differenza'], 2, ',', '.') ?></td>
                                         <td>
-                                        <div class="progress" style="height: 25px;">
-                                        <div class="progress-bar 
-                                            <?php
-                                                $percentuale = round($progetto['percentuale_completamento']);
-                                                if ($percentuale <= 33) {
-                                                    echo 'bg-danger';
-                                                } elseif ($percentuale <= 70) {
-                                                    echo 'bg-warning';
-                                                } else {
-                                                    echo 'bg-success';
-                                                }
-                                            ?>"
-                                            role="progressbar"
-                                            style="width: <?= $percentuale ?>%;" 
-                                            aria-valuenow="<?= $percentuale ?>" 
-                                            aria-valuemin="0" 
-                                            aria-valuemax="100">
-                                            <?= $percentuale ?>%
-                                        </div>
-                                    </div>
+                                            <div class="progress" style="height: 25px;">
+                                                <div class="progress-bar 
+                                                    <?php
+                                                        $percentuale = round($progetto['percentuale_completamento']);
+                                                        if ($percentuale <= 33) {
+                                                            echo 'bg-danger';
+                                                        } elseif ($percentuale <= 70) {
+                                                            echo 'bg-warning';
+                                                        } else {
+                                                            echo 'bg-success';
+                                                        }
+                                                    ?>"
+                                                    role="progressbar"
+                                                    style="width: <?= $percentuale ?>%;" 
+                                                    aria-valuenow="<?= $percentuale ?>" 
+                                                    aria-valuemin="0" 
+                                                    aria-valuemax="100">
+                                                    <?= $percentuale ?>%
+                                                </div>
+                                            </div>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -156,7 +156,7 @@ $conn->close();
                                 <?php foreach ($utenti_top as $index => $utente): ?>
                                     <tr>
                                         <td><?= $index + 1 ?></td>
-                                        <td><?= htmlspecialchars($utente['nickname']) ?></td>
+                                        <td><?= htmlspecialchars($utente['nickname_utente']) ?></td>
                                         <td>€<?= number_format($utente['totale_finanziamenti'], 2, ',', '.') ?></td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -194,8 +194,8 @@ $conn->close();
                                 <?php foreach ($creatori_top as $index => $creatore): ?>
                                     <tr>
                                         <td><?= $index + 1 ?></td>
-                                        <td><?= htmlspecialchars($creatore['nickname']) ?></td>
-                                        <td><?= number_format($creatore['affidabilita'], 2) ?>/100.00</td>
+                                        <td><?= htmlspecialchars($creatore['nickname_utente']) ?></td>
+                                        <td><?= number_format($creatore['affidabilita_utente'], 2, ',', '.') ?>%</td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -207,9 +207,9 @@ $conn->close();
         
         <div class="text-center mt-3 mb-4">
             <a href="../Autenticazione/<?php 
-                if ($_SESSION['ruolo'] === 'amministratore') {
+                if ($_SESSION['ruolo_utente'] === 'amministratore') {
                     echo 'home_amministratore.php';
-                } elseif ($_SESSION['ruolo'] === 'creatore') {
+                } elseif ($_SESSION['ruolo_utente'] === 'creatore') {
                     echo 'home_creatore.php';
                 } else {
                     echo 'home_utente.php';
