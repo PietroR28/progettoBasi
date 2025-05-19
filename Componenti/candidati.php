@@ -25,7 +25,7 @@ $esito = null;
 $messaggio = "";
 $errore = "";
 
-// Esegui la candidatura
+// Esegui la candidatura direttamente con email e nome profilo
 $stmt = $conn->prepare("CALL InserisciCandidatura(?, ?)");
 if (!$stmt) {
     $errore = "Errore nella preparazione della query: " . $conn->error;
@@ -71,7 +71,7 @@ if (!$stmt) {
         $errore = "❌ Errore nell'invio candidatura: " . $stmt->error;
         $esito = false;
     }
-
+    
     $stmt->close();
 }
 

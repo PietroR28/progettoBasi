@@ -3,7 +3,7 @@ session_start();
 if (!isset($_SESSION['email_utente'])) {
     die("Errore: utente non loggato.");
 }
-$id_utente = $_SESSION['email_utente'];
+$email_utente = $_SESSION['email_utente'];
 
 require_once __DIR__ . '/../mamp_xampp.php';
 ?>
@@ -16,18 +16,18 @@ require_once __DIR__ . '/../mamp_xampp.php';
     <link rel="stylesheet" href="../Stile/associa_profilo.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script>
-        function aggiungiCompetenza() {
+        function aggiungiSkill() {
             const wrapper = document.createElement('div');
-            wrapper.className = 'competenza row align-items-end mb-3';
+            wrapper.className = 'skill row align-items-end mb-3';
             wrapper.innerHTML = `
                 <div class="col-md-5">
-                    <label>Competenza:</label>
-                    <select name="competenze[]" class="form-select">
+                    <label>Skill:</label>
+                    <select name="skills[]" class="form-select">
                         <?php
-                        $query = "SELECT id_competenza, nome FROM competenza";
+                        $query = "SELECT nome_skill FROM skill";
                         $result = $conn->query($query);
                         while ($row = $result->fetch_assoc()) {
-                            echo "<option value='{$row['id_competenza']}'>{$row['nome']}</option>";
+                            echo "<option value='{$row['nome_skill']}'>{$row['nome_skill']}</option>";
                         }
                         ?>
                     </select>
@@ -44,14 +44,14 @@ require_once __DIR__ . '/../mamp_xampp.php';
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <button type="button" class="btn btn-danger" onclick="rimuoviCompetenza(this)">🗑️ Rimuovi</button>
+                    <button type="button" class="btn btn-danger" onclick="rimuoviSkill(this)">🗑️ Rimuovi</button>
                 </div>
             `;
-            document.getElementById('competenze').appendChild(wrapper);
+            document.getElementById('skills').appendChild(wrapper);
         }
 
-        function rimuoviCompetenza(button) {
-            const div = button.closest('.competenza');
+        function rimuoviSkill(button) {
+            const div = button.closest('.skill');
             div.remove();
         }
     </script>
@@ -62,17 +62,20 @@ require_once __DIR__ . '/../mamp_xampp.php';
 
     <form method="POST" action="inserisci_profilo.php" class="shadow p-4 bg-white rounded">
         <div class="mb-3">
-            <label for="id_progetto" class="form-label">Progetto Software:</label>
-            <select name="id_progetto" class="form-select" required>
+            <label for="nome_progetto" class="form-label">Progetto Software:</label>
+            <select name="nome_progetto" class="form-select" required>
                 <?php
-                $query = "SELECT id_progetto, nome FROM progetto WHERE id_utente_creatore = $id_utente AND tipo = 'software'";
-                $result = $conn->query($query);
+                $query = "SELECT nome_progetto FROM progetto WHERE email_utente_creatore = ? AND tipo_progetto = 'software' AND stato_progetto = 'aperto'";
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param("s", $email_utente);
+                $stmt->execute();
+                $result = $stmt->get_result();
 
                 if ($result->num_rows === 0) {
                     echo "<option disabled>Nessun progetto disponibile</option>";
                 } else {
                     while ($row = $result->fetch_assoc()) {
-                        echo "<option value='{$row['id_progetto']}'>{$row['nome']}</option>";
+                        echo "<option value='{$row['nome_progetto']}'>{$row['nome_progetto']}</option>";
                     }
                 }
                 ?>
@@ -84,17 +87,17 @@ require_once __DIR__ . '/../mamp_xampp.php';
             <input type="text" name="nome_profilo" class="form-control" required>
         </div>
 
-        <div id="competenze">
-            <h5 class="mt-4">🛠️ Competenze richieste:</h5>
-            <div class="competenza row align-items-end mb-3">
+        <div id="skills">
+            <h5 class="mt-4">🛠️ Skills richieste:</h5>
+            <div class="skill row align-items-end mb-3">
                 <div class="col-md-5">
-                    <label>Competenza:</label>
-                    <select name="competenze[]" class="form-select">
+                    <label>Skill:</label>
+                    <select name="skills[]" class="form-select">
                         <?php
-                        $query = "SELECT id_competenza, nome FROM competenza";
+                        $query = "SELECT nome_skill FROM skill";
                         $result = $conn->query($query);
                         while ($row = $result->fetch_assoc()) {
-                            echo "<option value='{$row['id_competenza']}'>{$row['nome']}</option>";
+                            echo "<option value='{$row['nome_skill']}'>{$row['nome_skill']}</option>";
                         }
                         ?>
                     </select>
@@ -111,13 +114,13 @@ require_once __DIR__ . '/../mamp_xampp.php';
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <button type="button" class="btn btn-danger" onclick="rimuoviCompetenza(this)">🗑️ Rimuovi</button>
+                    <button type="button" class="btn btn-danger" onclick="rimuoviSkill(this)">🗑️ Rimuovi</button>
                 </div>
             </div>
         </div>
 
         <div class="mb-3">
-            <button type="button" onclick="aggiungiCompetenza()" class="btn btn-primary">➕ Aggiungi competenza</button>
+            <button type="button" onclick="aggiungiSkill()" class="btn btn-primary">➕ Aggiungi skill</button>
         </div>
 
         <button type="submit" class="btn btn-secondary"> Associa Profilo</button>

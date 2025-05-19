@@ -58,10 +58,9 @@ require_once __DIR__ . '/../mamp_xampp.php';
                         echo "<h5 class='mt-3'>👤 Profilo: " . htmlspecialchars($profilo['nome_profilo']) . "</h5>";
 
                         $querySkill = "
-                            SELECT c.nome_skill, ps.livello_profilo
+                            SELECT s.nome_skill, p.livello_profilo
                             FROM profilo p
-                            JOIN profilo ps ON p.nome_profilo = ps.nome_profilo AND p.nome_skill = ps.nome_skill
-                            JOIN skill c ON ps.nome_skill = c.nome_skill
+                            JOIN skill s ON p.nome_skill = s.nome_skill
                             WHERE p.nome_profilo = '$nome_profilo'";
                         $resSkill = $conn->query($querySkill);
 
@@ -76,11 +75,11 @@ require_once __DIR__ . '/../mamp_xampp.php';
 
                         $queryOk = "
                             SELECT COUNT(*) AS tot_ok
-                            FROM profilo ps
-                            JOIN utente_skill uc ON ps.nome_skill = uc.nome_skill
-                            WHERE ps.nome_profilo = '$nome_profilo'
-                              AND uc.email_utente = '$email_utente'
-                              AND uc.livello_utente_skill >= ps.livello_profilo";
+                            FROM profilo p
+                            JOIN utente_skill us ON p.nome_skill = us.nome_skill
+                            WHERE p.nome_profilo = '$nome_profilo'
+                              AND us.email_utente = '$email_utente'
+                              AND us.livello_utente_skill >= p.livello_profilo";
                         $ok = $conn->query($queryOk)->fetch_assoc()['tot_ok'];
 
                         $queryCheck = "SELECT accettazione_candidatura FROM candidatura WHERE email_utente = '$email_utente' AND nome_profilo = '$nome_profilo'";
