@@ -122,8 +122,7 @@ if ($result) {
         $lista_skills[] = $row;
     }
 }
-
-// Recupera le skill già assegnate all'utente
+// 🔽 Recupera skill utente
 $skill_utente = [];
 $res = $conn->prepare("
     SELECT nome_skill, livello_utente_skill
@@ -162,36 +161,36 @@ $conn->close();
         </div>
     <?php endif; ?>
 
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-danger text-white">
-            <h5 class="mb-0">Aggiungi una nuova competenza</h5>
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Aggiungi una nuova competenza</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="">
+                    <div class="mb-3">
+                        <label for="nome_skill" class="form-label">Seleziona competenza:</label>
+                        <select name="nome_skill" id="nome_skill" class="form-control" required>
+                            <option value="">-- Scegli --</option>
+                            <?php foreach ($lista_skills as $comp): ?>
+                                <option value="<?= $comp['nome_skill'] ?>"><?= htmlspecialchars($comp['nome_skill']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="livello_utente_skill" class="form-label">Livello:</label>
+                        <select name="livello_utente_skill" id="livello_utente_skill" class="form-control" required>
+                            <option value="">-- Seleziona livello --</option>
+                            <?php for ($i = 1; $i <= 5; $i++): ?>
+                                <option value="<?= $i ?>"><?= $i ?></option>
+                            <?php endfor; ?>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-success"> Salva competenza</button>
+                </form>
+            </div>
         </div>
-        <div class="card-body">
-            <form method="POST">
-                <div class="mb-3">
-                    <label for="nome_skill" class="form-label">Seleziona competenza:</label>
-                    <select name="nome_skill" id="nome_skill" class="form-control" required>
-                        <option value="">-- Scegli --</option>
-                        <?php foreach ($lista_skills as $comp): ?>
-                            <option value="<?= htmlspecialchars($comp['nome_skill']) ?>">
-                                <?= htmlspecialchars($comp['nome_skill']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label for="livello_utente_skill" class="form-label">Livello:</label>
-                    <select name="livello_utente_skill" id="livello_utente_skill" class="form-control" required>
-                        <option value="">-- Seleziona livello --</option>
-                        <?php for ($i = 1; $i <= 5; $i++): ?>
-                            <option value="<?= $i ?>"><?= $i ?></option>
-                        <?php endfor; ?>
-                    </select>
-                </div>
-                <button type="submit" class="btn btn-success">Salva competenza</button>
-            </form>
-        </div>
-    </div>
 
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-danger text-white">
