@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             require_once __DIR__ . '/../mongoDB/mongodb.php';
             log_event(
-                'inserimento_skill',
+                'STRINGA SKILL INSERITA',
                 $email_utente,
                 "L'utente {$email_utente} ha aggiunto la skill \"{$nome_skill}\" alla lista condivisa.",
                 [
