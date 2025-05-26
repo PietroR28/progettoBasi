@@ -4,7 +4,6 @@ session_start();
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-// Connessione al DB
 require_once __DIR__ . '/../mamp_xampp.php';
 
 $email_utente = $_SESSION['email_utente'] ?? null;
@@ -12,7 +11,6 @@ if (!$email_utente) {
     die("Errore: utente non loggato.");
 }
 
-// Se è stato inviato il form
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['azione']) && $_POST['azione'] === 'modifica') {
         $nome_skill = $_POST['nome_skill'];
@@ -60,7 +58,7 @@ if ($result && $result->num_rows > 0) {
     }
 }
 
-// 🔽 Recupera skill utente
+// Recupera skill utente
 $skill_utente = [];
 $res = $conn->prepare("SELECT s.nome_skill, us.nome_skill, us.livello_utente_skill 
     FROM utente_skill us 

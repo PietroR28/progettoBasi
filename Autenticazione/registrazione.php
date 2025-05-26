@@ -15,7 +15,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $_POST['password'];
     $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
-    // 🔒 Controllo email univoca
+    // Controllo email univoca
     $check = $conn->prepare("SELECT COUNT(*) as cnt FROM utente WHERE email_utente = ?");
     $check->bind_param("s", $email);
     $check->execute();

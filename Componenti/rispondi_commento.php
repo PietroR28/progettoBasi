@@ -76,7 +76,7 @@ $stmt->store_result();
 $risposta_presente = $stmt->num_rows > 0;
 $stmt->close();
 
-// Inserimento risposta se non esiste
+// Inserimento risposta se non esiste con stored procedure
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['testo']) && !$risposta_presente) {
     $testo = trim($_POST['testo']);
     if (!empty($testo)) {

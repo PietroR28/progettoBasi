@@ -6,7 +6,6 @@ if (!isset($_SESSION['email_utente'])) {
     exit;
 }
 
-// Connessione al database
 require_once __DIR__ . '/../mamp_xampp.php';
 
 // Ottiene i progetti aperti più vicini al completamento dalla vista

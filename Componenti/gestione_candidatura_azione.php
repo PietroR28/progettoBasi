@@ -29,7 +29,6 @@ if (!$data_candidatura || !$nome_profilo || !in_array($azione, ['accetta', 'rifi
         $stmt->close();
     }
 }
-
 $conn->close();
 ?>
 

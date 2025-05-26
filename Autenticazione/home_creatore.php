@@ -1,7 +1,6 @@
 <?php
 session_start();
 
-// Sicurezza: verifica che l'utente sia loggato e sia un utente semplice
 if (!isset($_SESSION['email_utente']) || $_SESSION['ruolo_utente'] !== 'creatore') {
     header("Location: ../Autenticazione/login.php");
     exit();
@@ -156,7 +155,7 @@ $stmt->close();
             </a>
         </div>
 
-                <!-- Inseriscii Reward -->
+        <!-- Inseriscii Reward -->
         <div class="col">
             <a href="../Componenti/inserisci_reward.php" class="text-decoration-none text-dark">
                 <div class="card card-hover shadow-sm h-100">
@@ -167,7 +166,6 @@ $stmt->close();
                 </div>
             </a>
         </div>
-
 
          <!-- Le Mie Reward -->
          <div class="col">

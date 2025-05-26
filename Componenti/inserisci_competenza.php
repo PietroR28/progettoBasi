@@ -34,6 +34,7 @@ if ($result && $result->num_rows > 0) {
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -49,7 +50,7 @@ if ($result && $result->num_rows > 0) {
                 <label for="nome" class="form-label">Nome skill</label>
                 <input type="text" name="nome" id="nome" class="form-control" required>
             </div>
-            <button type="submit" class="btn btn-primary">Inserisci</button>
+            <button type="submit" class="btn btn-danger">Inserisci</button>
         </form>
 
         <?php if (!empty($messaggio)): ?>
@@ -78,7 +79,7 @@ if ($result && $result->num_rows > 0) {
     <div class="text-center mt-4">
     <a href="../Autenticazione/home_amministratore.php" class="btn btn-success">
          Torna alla Home
-        </a>
+    </a>
     </div>
 </div>
 </body>

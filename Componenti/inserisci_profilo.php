@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errore = "Errore: skills e livelli non corrispondono.";
     } else {
         try {
-            // Inseriamo le skill del profilo
+            // Inserire le skill del profilo
             $conn->begin_transaction();
             $success = true;
             

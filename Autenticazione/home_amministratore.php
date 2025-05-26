@@ -1,7 +1,6 @@
 <?php
 session_start();
 
-// Sicurezza: verifica che l'utente sia loggato e sia un utente semplice
 if (!isset($_SESSION['email_utente']) || $_SESSION['ruolo_utente'] !== 'amministratore') {
     header("Location: ../Autenticazione/login.php");
     exit();

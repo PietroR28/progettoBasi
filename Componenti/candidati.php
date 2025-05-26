@@ -47,7 +47,6 @@ if (!$stmt) {
         $info = $infoStmt->get_result()->fetch_assoc();
         $infoStmt->close();
 
-        // Log su MongoDB
         try {
             require_once __DIR__ . '/../mongoDB/mongodb.php';
 
@@ -77,8 +76,6 @@ if (!$stmt) {
 
 $conn->close();
 ?>
-
-
 
 <!DOCTYPE html>
 <html lang="it">
