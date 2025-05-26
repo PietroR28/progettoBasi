@@ -14,11 +14,10 @@ $messaggio = "";
 
 // Inserimento nuova skill
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // legge il nome della skill dal form
     $nome_skill = trim($_POST['nome_skill'] ?? '');
 
     if ($nome_skill !== '') {
-        // 1) inserimento con SP
+        // inserimento con SP
         $stmt = $conn->prepare("CALL InserisciSkill(?)");
         $stmt->bind_param("s", $nome_skill);
         if ($stmt->execute()) {
@@ -28,7 +27,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $stmt->close();
 
-        // 2) log su MongoDB
         try {
             require_once __DIR__ . '/../mongoDB/mongodb.php';
             log_event(

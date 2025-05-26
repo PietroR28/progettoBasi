@@ -80,12 +80,12 @@ if (!isset($_SESSION['email_utente']) || $_SESSION['ruolo_utente'] !== 'amminist
             </a>
         </div>
 
-        <!-- Competenza -->
+        <!-- Skill -->
         <div class="col">
             <a href="../Componenti/inserisci_skill.php" class="text-decoration-none text-dark">
                 <div class="card card-hover shadow-sm h-100">
                     <div class="card-body">
-                        <h5 class="card-title">➕ Aggiungi una Competenza</h5>
+                        <h5 class="card-title">➕ Aggiungi una Skill</h5>
                         <p class="card-text">Inserisci una nuova stringa nella lista delle competenze.</p>
                     </div>
                 </div>

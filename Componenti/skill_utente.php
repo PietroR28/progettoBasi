@@ -95,7 +95,7 @@ if ($result && $result->num_rows > 0) {
         $lista_skills[] = $row;
     }
 }
-// 🔽 Recupera skill utente
+// Recupera skill utente
 $skill_utente = [];
 $res = $conn->prepare("SELECT uc.email_utente, uc.nome_skill, uc.livello_utente_skill 
     FROM utente_skill uc 
@@ -130,12 +130,12 @@ $conn->close();
 
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-danger text-white">
-                <h5 class="mb-0">Aggiungi una nuova competenza</h5>
+                <h5 class="mb-0">Aggiungi una nuova skill</h5>
             </div>
             <div class="card-body">
                 <form method="POST" action="">
                     <div class="mb-3">
-                        <label for="nome_skill" class="form-label">Seleziona competenza:</label>
+                        <label for="nome_skill" class="form-label">Seleziona skill:</label>
                         <select name="nome_skill" id="nome_skill" class="form-control" required>
                             <option value="">-- Scegli --</option>
                             <?php foreach ($lista_skills as $comp): ?>
