@@ -4,20 +4,23 @@ session_start();
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
+// Connessione al DB
 require_once __DIR__ . '/../mamp_xampp.php';
 
-$email_utente = $_SESSION['email_utente'] ?? null;
-if (!$email_utente) {
-    die("Errore: utente non loggato.");
+if (!isset($_SESSION['email_utente'])) {
+    header("Location: ../Autenticazione/login.php");
+    exit;
 }
+$email_utente = $_SESSION['email_utente'];
 
+// Se è stato inviato il form
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['azione']) && $_POST['azione'] === 'modifica') {
         $nome_skill = $_POST['nome_skill'];
         $nuovo_livello = $_POST['nuovo_livello'];
 
         $stmt = $conn->prepare("CALL AggiornaLivelloSkillUtente(?, ?, ?)");
-        $stmt->bind_param("sss", $email_utente, $nome_skill, $nuovo_livello);
+        $stmt->bind_param("ssi", $email_utente, $nome_skill, $nuovo_livello);
         $stmt->execute();
         $stmt->close();
         $messaggio = "✅ Livello aggiornato!";
@@ -25,31 +28,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (isset($_POST['azione']) && $_POST['azione'] === 'elimina') {
         $nome_skill = $_POST['nome_skill'];
 
-        $stmt = $conn->prepare("CALL EliminaSkillUtente(?, ?)");
+        $stmt = $conn->prepare("CALL bostarter_db.EliminaSkillUtente(?, ?)");
         $stmt->bind_param("ss", $email_utente, $nome_skill);
         $stmt->execute();
         $stmt->close();
+        try {
+            require_once __DIR__ . '/../mongoDB/mongodb.php';
+
+            log_event(
+                'SKILL CURRICULUM ELIMINATA',
+                $_SESSION['email_utente'],
+                "L'utente {$_SESSION['email_utente']} ha eliminato la skill \"{$nome_skill}\" dal proprio curriculum.",
+                [
+                    'email_utente' => $email_utente,
+                    'nome_skill'   => $nome_skill,
+                ]
+            );
+        } catch (Exception $e) {
+            error_log("❌ Errore nel log MongoDB: " . $e->getMessage());
+        }
         $messaggio = "🗑️ Skill rimossa!";
 
     } else {
         // Inserimento standard
         $nome_skill = $_POST['nome_skill'] ?? null;
-        $livello = $_POST['livello'] ?? null;
+        $livello_utente_skill = $_POST['livello_utente_skill'] ?? null;
 
-        if ($nome_skill && $livello) {
+        if ($nome_skill && $livello_utente_skill) {
             $stmt = $conn->prepare("CALL InserisciSkillCurriculum(?, ?, ?)");
-            $stmt->bind_param("ssi", $email_utente, $nome_skill, $livello);
+            $stmt->bind_param("ssi", $email_utente, $nome_skill, $livello_utente_skill);
             if ($stmt->execute()) {
                 $messaggio = "✅ Skill inserita con successo!";
+
+            try {
+                require_once __DIR__ . '/../mongoDB/mongodb.php';
+
+                log_event(
+                    'SKILL CURRICULUM AGGIUNTA',
+                    $_SESSION['email_utente'],
+                    "L'utente {$_SESSION['email_utente']} ha aggiunto la skill \"{$nome_skill}\"al proprio curriculum.",
+                    [
+                        'email_utente' => $email_utente,
+                        'nome_skill' => $nome_skill,
+                        'livello_utente_skill' => $livello_utente_skill
+                    ]
+                );
+            } catch (Exception $e) {
+                error_log("❌ Errore nel log MongoDB: " . $e->getMessage());
+            }
+
             } else {
                 $messaggio = "❌ Errore durante l'inserimento: " . $stmt->error;
-            }            $stmt->close();
+            }
+            $stmt->close();
         } else {
-            $messaggio = "⚠️ Devi selezionare una skill e un livello.";
-        }    }
+            $messaggio = "⚠️ Devi selezionare una competenza e un livello.";
+        }
+    }
 }
 
-// Carica tutte le skills disponibili
+// Carica tutte le competenze disponibili
 $lista_skills = [];
 $result = $conn->query("SELECT nome_skill FROM skill");
 if ($result && $result->num_rows > 0) {
@@ -57,27 +95,26 @@ if ($result && $result->num_rows > 0) {
         $lista_skills[] = $row;
     }
 }
-
-// Recupera skill utente
+// 🔽 Recupera skill utente
 $skill_utente = [];
-$res = $conn->prepare("SELECT s.nome_skill, us.nome_skill, us.livello_utente_skill 
-    FROM utente_skill us 
-    JOIN skill s ON s.nome_skill = us.nome_skill 
-    WHERE us.email_utente = ?");
-$res->bind_param("s", $email_utente);
+$res = $conn->prepare("SELECT uc.email_utente, uc.nome_skill, uc.livello_utente_skill 
+    FROM utente_skill uc 
+    JOIN skill c ON c.nome_skill = uc.nome_skill 
+    WHERE uc.email_utente = ?");
+$res->bind_param("i", $email_utente);
 $res->execute();
 $res_ris = $res->get_result();
 while ($riga = $res_ris->fetch_assoc()) {
     $skill_utente[] = $riga;
 }
-$res->close();
 $conn->close();
 ?>
 
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">    <title>Aggiungi Skill</title>
+    <meta charset="UTF-8">
+    <title>Aggiungi Competenza</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="../Stile/skill_utente.css" rel="stylesheet">
 </head>
@@ -91,30 +128,33 @@ $conn->close();
             </div>
         <?php endif; ?>
 
-        <div class="card shadow-sm mb-4">            <div class="card-header bg-danger text-white">
-                <h5 class="mb-0">Aggiungi una nuova skill</h5>
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Aggiungi una nuova competenza</h5>
             </div>
             <div class="card-body">
                 <form method="POST" action="">
                     <div class="mb-3">
-                        <label for="nome_skill" class="form-label">Seleziona skill:</label>                        <select name="nome_skill" id="nome_skill" class="form-control" required>
+                        <label for="nome_skill" class="form-label">Seleziona competenza:</label>
+                        <select name="nome_skill" id="nome_skill" class="form-control" required>
                             <option value="">-- Scegli --</option>
-                            <?php foreach ($lista_skills as $skill_item): ?>
-                                <option value="<?= $skill_item['nome_skill'] ?>"><?= htmlspecialchars($skill_item['nome_skill']) ?></option>
+                            <?php foreach ($lista_skills as $comp): ?>
+                                <option value="<?= $comp['nome_skill'] ?>"><?= htmlspecialchars($comp['nome_skill']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
 
                     <div class="mb-3">
-                        <label for="livello" class="form-label">Livello:</label>
-                        <select name="livello" id="livello" class="form-control" required>
+                        <label for="livello_utente_skill" class="form-label">Livello:</label>
+                        <select name="livello_utente_skill" id="livello_utente_skill" class="form-control" required>
                             <option value="">-- Seleziona livello --</option>
                             <?php for ($i = 1; $i <= 5; $i++): ?>
                                 <option value="<?= $i ?>"><?= $i ?></option>
                             <?php endfor; ?>
-                        </select>                    </div>
+                        </select>
+                    </div>
 
-                    <button type="submit" class="btn btn-success"> Salva skill</button>
+                    <button type="submit" class="btn btn-success"> Salva competenza</button>
                 </form>
             </div>
         </div>
@@ -151,23 +191,20 @@ $conn->close();
                                         <button type="submit" class="btn-like-input">🗑️Elimina</button>
                                     </form>
                                 </div>
+
                             </li>
                         <?php endforeach; ?>
                     </ul>
                 <?php endif; ?>
             </div>
-        </div>        <div class="mt-4">
+        </div>
+
+        <div class="mt-4">
             <a href="../Autenticazione/<?php 
-                $homePage = 'home_utente.php'; // Default per utenti normali
-                if (isset($_SESSION['ruolo'])) {
-                    if ($_SESSION['ruolo'] === 'amministratore') {
-                        $homePage = 'home_amministratore.php';
-                    } elseif ($_SESSION['ruolo'] === 'creatore') {
-                        $homePage = 'home_creatore.php';
-                    }
-                }
-                echo $homePage;
+                echo ($_SESSION['ruolo_utente'] === 'amministratore') ? 'home_amministratore.php' :
+                    (($_SESSION['ruolo_utente'] === 'creatore') ? 'home_creatore.php' : 'home_utente.php');
             ?>" class="btn btn-success">Torna alla Home</a>
         </div>
 </body>
+
 </html>

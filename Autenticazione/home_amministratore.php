@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// Sicurezza: verifica che l'utente sia loggato e sia un utente semplice
 if (!isset($_SESSION['email_utente']) || $_SESSION['ruolo_utente'] !== 'amministratore') {
     header("Location: ../Autenticazione/login.php");
     exit();
@@ -81,7 +82,7 @@ if (!isset($_SESSION['email_utente']) || $_SESSION['ruolo_utente'] !== 'amminist
 
         <!-- Competenza -->
         <div class="col">
-            <a href="../Componenti/inserisci_competenza.php" class="text-decoration-none text-dark">
+            <a href="../Componenti/inserisci_skill.php" class="text-decoration-none text-dark">
                 <div class="card card-hover shadow-sm h-100">
                     <div class="card-body">
                         <h5 class="card-title">➕ Aggiungi una Competenza</h5>
