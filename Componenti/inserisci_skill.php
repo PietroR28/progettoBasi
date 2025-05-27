@@ -3,7 +3,6 @@ session_start();
 require_once __DIR__ . '/../mamp_xampp.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-// se non loggato, rimanda al login
 if (!isset($_SESSION['email_utente'])) {
     header("Location: ../Autenticazione/login.php");
     exit;
@@ -71,7 +70,7 @@ if ($result) {
                 <label for="nome_skill" class="form-label">Nome skill</label>
                 <input type="text" name="nome_skill" id="nome_skill" class="form-control" required>
             </div>
-            <button type="submit" class="btn btn-primary">Inserisci</button>
+            <button type="submit" class="btn btn-danger">Inserisci</button>
         </form>
 
         <?php if (!empty($messaggio)): ?>

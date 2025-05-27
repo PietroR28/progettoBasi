@@ -86,7 +86,7 @@ if (!isset($_SESSION['email_utente']) || $_SESSION['ruolo_utente'] !== 'amminist
                 <div class="card card-hover shadow-sm h-100">
                     <div class="card-body">
                         <h5 class="card-title">➕ Aggiungi una Skill</h5>
-                        <p class="card-text">Inserisci una nuova stringa nella lista delle competenze.</p>
+                        <p class="card-text">Inserisci una nuova stringa nella lista delle skill.</p>
                     </div>
                 </div>
             </a>
@@ -98,7 +98,7 @@ if (!isset($_SESSION['email_utente']) || $_SESSION['ruolo_utente'] !== 'amminist
                 <div class="card card-hover shadow-sm h-100">
                     <div class="card-body">
                         <h5 class="card-title">💫 Le mie Reward</h5>
-                        <p class="card-text">Visualizza le Reward ottenute.</p>
+                        <p class="card-text">Visualizza le reward ottenute.</p>
                     </div>
                 </div>
             </a>

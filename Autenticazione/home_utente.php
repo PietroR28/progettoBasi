@@ -38,7 +38,7 @@ if (!isset($_SESSION['email_utente']) || $_SESSION['ruolo_utente'] !== 'utente')
                 <div class="card card-hover shadow-sm h-100">
                     <div class="card-body">
                         <h5 class="card-title">🧠 Le tue Skill</h5>
-                        <p class="card-text">Aggiungi o aggiorna le competenze del tuo profilo.</p>
+                        <p class="card-text">Aggiungi o aggiorna le skill del tuo profilo.</p>
                     </div>
                 </div>
             </a>
@@ -86,7 +86,7 @@ if (!isset($_SESSION['email_utente']) || $_SESSION['ruolo_utente'] !== 'utente')
                 <div class="card card-hover shadow-sm h-100">
                     <div class="card-body">
                         <h5 class="card-title">💫 Le mie Reward</h5>
-                        <p class="card-text">Visualizza le Reward ottenute.</p>
+                        <p class="card-text">Visualizza le reward ottenute.</p>
                     </div>
                 </div>
             </a>

@@ -1,6 +1,6 @@
 <?php
 // Scegliere "xampp" o "mamp" in base all'ambiente locale
-$ambiente = "xampp"; // cambiare solo questa riga quando serve
+$ambiente = "mamp"; // cambiare solo questa riga quando serve
 
 $host = "localhost";
 $user = "root";
