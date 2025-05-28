@@ -114,13 +114,13 @@ $stmt->close();
                     </a>
                 </div>
 
-        <!-- Competenza -->
+        <!-- Componente -->
         <div class="col">
             <a href="../Componenti/inserisci_componente.php" class="text-decoration-none text-dark">
                 <div class="card card-hover shadow-sm h-100">
                     <div class="card-body">
                         <h5 class="card-title">➕ Aggiungi un nuovo componente</h5>
-                        <p class="card-text">Inserisci un nuovo componente nella lista dei componenti disponibili.</p>
+                        <p class="card-text">Inserisci un nuovo componente per i progetti Hardware.</p>
                     </div>
                 </div>
             </a>

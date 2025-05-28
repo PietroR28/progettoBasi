@@ -85,7 +85,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         log_event(
                             'SKILL CURRICULUM AGGIUNTA',
                             $email_utente,
-                            "L'utente {$email_utente} ha aggiunto la skill \"{$nome_skill}\" con livello {$livello_utente_skill}.",
+                            "L'utente {$email_utente} ha aggiunto la skill \"{$nome_skill}\" 
+                            con livello {$livello_utente_skill}.",
                             [
                                 'email_utente'          => $email_utente,
                                 'nome_skill'            => $nome_skill,

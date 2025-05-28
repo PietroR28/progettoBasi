@@ -45,12 +45,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $conn->commit();
                 
                 // Prepara dati per il log
-                $skills_richieste = [];
-                for ($i = 0; $i < count($skills); $i++) {                $skills_richieste[] = [
-                        'nome_skill' => $skills[$i],
-                        'livello' => $livelli[$i]
-                    ];
-                }
+             $skills_richieste = [];
+for ($i = 0; $i < count($skills); $i++) {
+    $skills_richieste[] = $skills[$i] . " (livello " . $livelli[$i] . ")";
+}
+
                 
                 // Log MongoDB
                 if (isset($_SESSION['email_utente'])) {

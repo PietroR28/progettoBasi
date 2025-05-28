@@ -190,7 +190,7 @@ $conn->close();
                                                         </p>
                                                     </div>
                                                 <?php else: ?>
-                                                    <a href="rispondi_commento.php?nome_progetto=<?= urlencode($progetto['nome_progetto']) ?>&id_commento=<?= $commento['id_commento'] ?>" class="btn btn-outline-primary btn-sm mt-2">Rispondi</a>
+                                                    <a href="rispondi_commento.php?nome_progetto=<?= urlencode($progetto['nome_progetto']) ?>&id_commento=<?= $commento['id_commento'] ?>" class="btn btn-outline-success btn-sm mt-2">Rispondi</a>
                                                 <?php endif; ?>
                                             </li>
                                         <?php endforeach; ?>
