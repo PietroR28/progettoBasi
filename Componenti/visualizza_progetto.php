@@ -194,16 +194,15 @@ $conn->close();
                                                 <strong><?= htmlspecialchars($commento['nickname']) ?></strong> - <?= htmlspecialchars($commento['data']) ?>
                                                 <p><?= nl2br(htmlspecialchars($commento['testo'])) ?></p>
 
-                                                <?php if (!empty($commento['risposte'])): ?>
+                                                <?php if (!empty($commento['risposta_creatore'])): ?>
                                                     <ul class="list-group list-group-flush ms-3">
-                                                        <?php foreach ($commento['risposte'] as $risposta): ?>
-                                                            <li class="list-group-item">
-                                                                <strong><?= htmlspecialchars($risposta['nickname']) ?></strong> - <?= htmlspecialchars($risposta['data']) ?>
-                                                                <p><?= nl2br(htmlspecialchars($risposta['testo'])) ?></p>
-                                                            </li>
-                                                        <?php endforeach; ?>
+                                                        <li class="list-group-item">
+                                                            <strong><?= htmlspecialchars($commento['risposta_creatore']['nickname']) ?></strong> - <?= htmlspecialchars($commento['risposta_creatore']['data']) ?>
+                                                            <p><?= nl2br(htmlspecialchars($commento['risposta_creatore']['testo'])) ?></p>
+                                                        </li>
                                                     </ul>
                                                 <?php endif; ?>
+
                                             </li>
                                         <?php endforeach; ?>
                                     </ul>

@@ -80,8 +80,8 @@ $stmt->close();
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['testo']) && !$risposta_presente) {
     $testo = trim($_POST['testo']);
     if (!empty($testo)) {
-        $stmt = $conn->prepare("CALL InserisciRisposta(?, ?, ?)");
-        $stmt->bind_param("iss", $id_commento, $email_utente, $testo);
+        $stmt = $conn->prepare("CALL InserisciRisposta(?, ?, ?, ?)");
+        $stmt->bind_param("isss", $id_commento, $email_utente, $testo, $nome_progetto);
         
         if ($stmt->execute()) {
             log_event(
