@@ -80,11 +80,10 @@ for ($i = 0; $i < count($skills); $i++) {
                 }
             }
         } catch (Exception $e) {
-            if ($conn->inTransaction()) {
-                $conn->rollback();
-            }
+            $conn->rollback();
             $errore = "❌ Errore: " . $e->getMessage();
         }
+
     }
 }
 
